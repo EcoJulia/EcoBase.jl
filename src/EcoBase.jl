@@ -1,4 +1,4 @@
-module TestDiversity
+module EcoBase
 
 import Base: show
 import RecipesBase
