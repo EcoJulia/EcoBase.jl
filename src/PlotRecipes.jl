@@ -16,11 +16,11 @@ RecipesBase.@recipe function f(var::AbstractVector, grd::AbstractGrid)
     xrange(grd), yrange(grd), convert_to_image(var, grd)
 end
 
-RecipesBase.@recipe function f(sit::SiteFields)
-    ones(nsites(sit)), sit
-end
+# RecipesBase.@recipe function f(sit::SiteFields) # not sure what SiteFields are
+#     ones(nsites(sit)), sit
+# end
 
-RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPoints)
+RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractLocations)
     registercolors()
     seriestype := :scatter
     aspect_ratio --> :equal
