@@ -26,10 +26,10 @@ noccupied(x, idx) = length(occupied(x, idx))
 thingoccurrences(com::AbstractAssemblage, idx) = view(occurrences(com), idx, :)
 placeoccurrences(com::AbstractAssemblage, idx) = view(occurrences(com), :, idx) # make certain that the view implementation also takes thing or place names
 
-richness(com::AbstractAssemblage{_, _, Bool}) = vec(sum(occurrences(com), 1))
+richness(com::AbstractAssemblage{T, P, Bool}) where {T, P} = vec(sum(occurrences(com), 1))
 richness(com::AbstractAssemblage) = vec(mapslices(nnz, occurrences(com), 1))
 
-occupancy(com::AbstractAssemblage{_, _, Bool}) = vec(sum(occurrences(com), 2))
+occupancy(com::AbstractAssemblage{T, P, Bool}) where {T, P} = vec(sum(occurrences(com), 2))
 occupancy(com::AbstractAssemblage) = vec(mapslices(nnz, occurrences(com), 2))
 
 records(com::AbstractAssemblage) = nnz(occurrences(com))
@@ -41,10 +41,10 @@ function cooccurring(com::AbstractAssemblage, inds::AbstractVector)
 end
 
 function createsummaryline(vec::AbstractVector{T}) where T <: AbstractString
-    linefunc(vec) = mapreduce(x->x * ", ", *, vec[1:(end-1)]) * vec[end]
+    linefunc(vec) = mapreduce(x->x*", ", *, vec[1:(end-1)])*vec[end]
     length(vec) == 1 && return vec[1]
     length(vec) < 6 && return linefunc(vec)
-    linefunc(vec[1:3]) * "..." * linefunc(vec[(end-1):end])
+    linefunc(vec[1:3])*"..."*linefunc(vec[(end-1):end])
 end
 
 
@@ -67,7 +67,7 @@ end
 @forward_func AbstractAssemblage.places nplaces, placenames
 @forward_func AbstractAssemblage.things nthings, thingnames
 
-TODO:
+# TODO:
 # accessing cache
 
 
@@ -81,8 +81,8 @@ cellsize(g::AbstractGrid) = xcellsize(g), ycellsize(g)
 cells(g::AbstractGrid) = xcells(g), ycells(g)
 xrange(g::AbstractGrid) = xmin(g):xcellsize(g):xmax(g) #includes intermediary points
 yrange(g::AbstractGrid) = ymin(g):ycellsize(g):ymax(g)
-xmax(g::AbstractGrid) = xmin(g) + xcellsize(g) * (xcells(g)-1)
-ymax(g::AbstractGrid) = ymin(g) + ycellsize(g) * (ycells(g)-1)
+xmax(g::AbstractGrid) = xmin(g) + xcellsize(g)*(xcells(g)-1)
+ymax(g::AbstractGrid) = ymin(g) + ycellsize(g)*(ycells(g)-1)
 
 
 indices(grd::AbstractGrid, idx) = error("function not defined for this type") #Implement this in SpatialEcology!

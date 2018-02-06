@@ -57,6 +57,6 @@ individuals, or presence-absence of genera over multiple islands.
 """
 abstract type AbstractAssemblage{T <: AbstractThings,
                                  P <: AbstractPlaces,
-                                 D <: Real}
+                                 D <: Real} end
 
 # depend explicitly on AxisArrays (and/or sparse) in some implementation?
