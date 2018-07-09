@@ -40,18 +40,26 @@ function cooccurring(com::AbstractAssemblage, inds::AbstractVector)
     richness(sub) .== nthings(sub)
 end
 
-function createsummaryline(vec::AbstractVector{T}) where T <: AbstractString
-    linefunc(vec) = mapreduce(x->x*", ", *, vec[1:(end-1)])*vec[end]
+function createsummaryline(vec::AbstractVector{<:AbstractString})
+    linefunc(vec) = mapreduce(x -> x * ", ", *, vec[1:(end-1)]) * vec[end]
     length(vec) == 1 && return vec[1]
     length(vec) < 6 && return linefunc(vec)
-    linefunc(vec[1:3])*"..."*linefunc(vec[(end-1):end])
+    linefunc(vec[1:3]) * "..." * linefunc(vec[(end-1):end])
 end
 
 
 function show(io::IO, com::T) where T <: AbstractAssemblage
     sp = createsummaryline(thingnames(com))
     si = createsummaryline(placenames(com))
-    println(io, "$T with $(nthings(com)) things in $(nplaces(com)) places\n\nThing names:\n$(sp)\n\nPlace names:\n$(si)")
+    println(io,
+    """$T with $(nthings(com)) things in $(nplaces(com)) places
+
+    Thing names:
+    $(sp)
+
+    Place names:
+    $(si)
+    """)
 end
 
 
@@ -70,7 +78,6 @@ end
 # TODO:
 # accessing cache
 
-
 xmin(g::AbstractGrid) = error("function not defined for this type")
 ymin(g::AbstractGrid) = error("function not defined for this type")
 xcellsize(g::AbstractGrid) = error("function not defined for this type")
@@ -81,8 +88,8 @@ cellsize(g::AbstractGrid) = xcellsize(g), ycellsize(g)
 cells(g::AbstractGrid) = xcells(g), ycells(g)
 xrange(g::AbstractGrid) = xmin(g):xcellsize(g):xmax(g) #includes intermediary points
 yrange(g::AbstractGrid) = ymin(g):ycellsize(g):ymax(g)
-xmax(g::AbstractGrid) = xmin(g) + xcellsize(g)*(xcells(g)-1)
-ymax(g::AbstractGrid) = ymin(g) + ycellsize(g)*(ycells(g)-1)
+xmax(g::AbstractGrid) = xmin(g) + xcellsize(g) * (xcells(g) - 1)
+ymax(g::AbstractGrid) = ymin(g) + ycellsize(g) * (ycells(g) - 1)
 
 
 indices(grd::AbstractGrid, idx) = error("function not defined for this type") #Implement this in SpatialEcology!
