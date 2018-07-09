@@ -26,10 +26,10 @@ noccupied(x, idx) = length(occupied(x, idx))
 thingoccurrences(com::AbstractAssemblage, idx) = view(occurrences(com), idx, :)
 placeoccurrences(com::AbstractAssemblage, idx) = view(occurrences(com), :, idx) # make certain that the view implementation also takes thing or place names
 
-richness(com::AbstractAssemblage{T, P, Bool}) where {T, P} = vec(sum(occurrences(com), 1))
+richness(com::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(sum(occurrences(com), 1))
 richness(com::AbstractAssemblage) = vec(mapslices(nnz, occurrences(com), 1))
 
-occupancy(com::AbstractAssemblage{T, P, Bool}) where {T, P} = vec(sum(occurrences(com), 2))
+occupancy(com::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(sum(occurrences(com), 2))
 occupancy(com::AbstractAssemblage) = vec(mapslices(nnz, occurrences(com), 2))
 
 records(com::AbstractAssemblage) = nnz(occurrences(com))
