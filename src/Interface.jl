@@ -4,14 +4,15 @@ view(com::AbstractAssemblage) = error("function not defined for this type")
 places(asm::AbstractAssemblage) = error("function not defined for this type")
 things(asm::AbstractAssemblage) = error("function not defined for this type")
 
-nplaces(com::AbstractPlaces) = size(occurrences(com), 2)
+nplaces(com::AbstractPlaces) = error("function not defined for this type")
 placenames(com::AbstractPlaces) = error("function not defined for this type")
 
-nthings(com::AbstractThings) = size(occurrences(com), 1)
+nthings(com::AbstractThings) = error("function not defined for this type")
 thingnames(com::AbstractThings) = error("function not defined for this type")
 
-nzrows(a::AbstractMatrix) = find(sum(a .> 0, 2) > 0)
-nzcols(a::AbstractMatrix) = find(sum(a .> 0, 1) > 0)
+nzrows(a::AbstractMatrix) = find(sum(a .> 0, 2) .> 0)
+nzcols(a::AbstractMatrix) = find(sum(a .> 0, 1) .> 0)
+nnz(a::AbstractArray) = sum(a .> 0)
 
 occurring(com::AbstractAssemblage) = nzrows(occurrences(com))
 occupied(com::AbstractAssemblage) = nzcols(occurrences(com))
