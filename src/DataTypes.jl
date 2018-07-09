@@ -45,9 +45,9 @@ spaced, identically shaped, locations.
 abstract type AbstractGrid <: AbstractLocations end
 
 """
-    AbstractAssemblage{T <: AbstractThings,
-                       P <: AbstractPlaces,
-                       D <: Real (e.g. Int, Float64, Bool)}
+    AbstractAssemblage{D <: Real (e.g. Int, Float64, Bool),
+                       T <: AbstractThings,
+                       P <: AbstractPlaces}
 
 An assemblage of things recorded as being present in one or more
 places. These may, for instance, be species counts in quadrats over a
@@ -55,8 +55,8 @@ regular grid, relative abundance of viral sequences in a group of
 individuals, or presence-absence of genera over multiple islands.
 
 """
-abstract type AbstractAssemblage{T <: AbstractThings,
-                                 P <: AbstractPlaces,
-                                 D <: Real} end
+abstract type AbstractAssemblage{D <: Real,
+                                 T <: AbstractThings,
+                                 P <: AbstractPlaces} end
 
 # depend explicitly on AxisArrays (and/or sparse) in some implementation?
