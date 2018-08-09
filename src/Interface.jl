@@ -1,3 +1,5 @@
+using Base: Meta.isexpr
+
 # Functions - most have to be implemented with the concrete type
 occurrences(asm::AbstractAssemblage) = error("function not defined for this type")
 view(asm::AbstractAssemblage) = error("function not defined for this type")
