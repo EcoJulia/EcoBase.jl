@@ -1,5 +1,5 @@
 # Functions - most have to be implemented with the concrete type
-occurrences(com::AbstractAssemblage) = error("function not defined for this type") 
+occurrences(com::AbstractAssemblage) = error("function not defined for this type")
 view(com::AbstractAssemblage) = error("function not defined for this type")
 places(asm::AbstractAssemblage) = error("function not defined for this type")
 things(asm::AbstractAssemblage) = error("function not defined for this type")
@@ -56,13 +56,15 @@ end
 
 
 macro forward_func(ex, fs)
-    T, field = ex.args[1], ex.args[2].args[1]
+    T, field = ex.args[1], ex.args[2].value
+
     T = esc(T)
-    fs = Meta.isexpr(fs, :tuple) ? map(esc, fs.args) : [esc(fs)]
-    :($([:($f(x::$T, args...) = (Base.@_inline_meta; $f($(field)(x), args...)))
+    fs = isexpr(fs, :tuple) ? map(esc, fs.args) : [esc(fs)]
+    :($([:($f(x::$T, args...) = (Base.@_inline_meta; $f(x.$field, args...)))
         for f in fs]...);
     nothing)
 end
+
 
 @forward_func AbstractAssemblage.places nplaces, placenames
 @forward_func AbstractAssemblage.things nthings, thingnames
