@@ -1,4 +1,3 @@
-using Base: Meta.isexpr
 
 # Functions - most have to be implemented with the concrete type
 occurrences(asm::AbstractAssemblage) = error("function not defined for this type")
@@ -65,20 +64,10 @@ function show(io::IO, asm::T) where T <: AbstractAssemblage
     """)
 end
 
-
-macro forward_func(ex, fs)
-    T, field = ex.args[1], ex.args[2].value
-
-    T = esc(T)
-    fs = isexpr(fs, :tuple) ? map(esc, fs.args) : [esc(fs)]
-    :($([:($f(x::$T, args...) = (Base.@_inline_meta; $f(x.$field, args...)))
-        for f in fs]...);
-    nothing)
-end
-
-
-@forward_func AbstractAssemblage.places nplaces, placenames
-@forward_func AbstractAssemblage.things nthings, thingnames
+nplaces(asm::AbstractAssemblage, args...) = nplaces(places(asm), args...)
+placenames(asm::AbstractAssemblage, args...) = placenames(places(asm), args...)
+nthings(asm::AbstractAssemblage, args...) = nthings(things(asm), args...)
+thingnames(asm::AbstractAssemblage, ags...) = thingnames(things(asm), args...)
 
 # TODO:
 # accessing cache
