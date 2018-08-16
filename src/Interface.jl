@@ -67,7 +67,7 @@ end
 nplaces(asm::AbstractAssemblage, args...) = nplaces(places(asm), args...)
 placenames(asm::AbstractAssemblage, args...) = placenames(places(asm), args...)
 nthings(asm::AbstractAssemblage, args...) = nthings(things(asm), args...)
-thingnames(asm::AbstractAssemblage, ags...) = thingnames(things(asm), args...)
+thingnames(asm::AbstractAssemblage, args...) = thingnames(things(asm), args...)
 
 # TODO:
 # accessing cache
