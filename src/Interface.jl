@@ -12,15 +12,19 @@ placenames(plc::AbstractPlaces) = error("function not defined for this type")
 nthings(thg::AbstractThings) = error("function not defined for this type")
 thingnames(thg::AbstractThings) = error("function not defined for this type")
 
-nzrows(a::AbstractMatrix) = find(sum(a .> 0, 2) .> 0)
-nzcols(a::AbstractMatrix) = find(sum(a .> 0, 1) .> 0)
-nnz(a::AbstractArray) = sum(a .> 0)
+nzrows(a::AbstractMatrix) = LinearIndices(Compat.sum(a .> 0, dims=2))[findall(Compat.sum(a .> 0, dims=2) .> 0)]
+nzcols(a::AbstractMatrix) = LinearIndices(Compat.sum(a .> 0, dims=1))[findall(Compat.sum(a .> 0, dims=1) .> 0)]
+nnz(a::AbstractArray) = Compat.sum(a .> 0)
 
 occurring(asm::AbstractAssemblage) = nzrows(occurrences(asm))
 occupied(asm::AbstractAssemblage) = nzcols(occurrences(asm))
-occupied(asm::AbstractAssemblage, idx) = findn(occurrences(asm)[idx, :])
-occurring(asm::AbstractAssemblage, idx) = findn(occurrences(asm)[:, idx])
-
+if VERSION < v"0.7.0-"
+    occupied(asm::AbstractAssemblage, idx) = collect(zip(findn(occurrences(asm)[idx, :])))
+    occurring(asm::AbstractAssemblage, idx) = collect(zip(findn(occurrences(asm)[:, idx])))
+else
+    occupied(asm::AbstractAssemblage, idx) = findall(!iszero, occurrences(asm)[idx, :])
+    occurring(asm::AbstractAssemblage, idx) = findall(!iszero, occurrences(asm)[:, idx])
+end
 noccurring(x) = length(occurring(x))
 noccupied(x) = length(occupied(x))
 noccurring(x, idx) = length(occurring(x, idx))
