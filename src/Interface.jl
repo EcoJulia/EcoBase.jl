@@ -1,3 +1,4 @@
+using Compat
 
 # Functions - most have to be implemented with the concrete type
 occurrences(asm::AbstractAssemblage) = error("function not defined for this type")
@@ -28,11 +29,11 @@ noccupied(x, idx) = length(occupied(x, idx))
 thingoccurrences(asm::AbstractAssemblage, idx) = view(occurrences(asm), idx, :)
 placeoccurrences(asm::AbstractAssemblage, idx) = view(occurrences(asm), :, idx) # make certain that the view implementation also takes thing or place names
 
-richness(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(sum(occurrences(asm), 1))
-richness(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), 1))
+richness(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(Compat.sum(occurrences(asm), dims=1))
+richness(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=1))
 
-occupancy(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(sum(occurrences(asm), 2))
-occupancy(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), 2))
+occupancy(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(Compat.sum(occurrences(asm), dims=2))
+occupancy(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=2))
 
 records(asm::AbstractAssemblage) = nnz(occurrences(asm))
 
