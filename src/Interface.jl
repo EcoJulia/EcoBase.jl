@@ -39,7 +39,7 @@ richness(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=1)
 occupancy(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(Compat.sum(occurrences(asm), dims=2))
 occupancy(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=2))
 
-records(asm::AbstractAssemblage) = nnz(occurrences(asm))
+nrecords(asm::AbstractAssemblage) = nnz(occurrences(asm))
 
 cooccurring(asm::AbstractAssemblage, inds...) = cooccurring(asm, [inds...])
 function cooccurring(asm::AbstractAssemblage, inds::AbstractVector)
