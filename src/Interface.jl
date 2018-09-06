@@ -30,8 +30,10 @@ noccupied(x) = length(occupied(x))
 noccurring(x, idx) = length(occurring(x, idx))
 noccupied(x, idx) = length(occupied(x, idx))
 
-thingoccurrences(asm::AbstractAssemblage, idx) = view(occurrences(asm), idx, :)
-placeoccurrences(asm::AbstractAssemblage, idx) = view(occurrences(asm), :, idx) # make certain that the view implementation also takes thing or place names
+thingoccurrences(asm::AbstractAssemblage, idx) = thingoccurrences(occurrences(asm), idx)
+thingoccurrences(mat::AbstractMatrix, idx) = view(mat, idx, :)
+placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(asm), idx)
+placeoccurrences(mat::AbstractMatrix, idx) = view(occurrences(asm), :, idx) # make certain that the view implementation also takes thing or place names
 
 richness(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(Compat.sum(occurrences(asm), dims=1))
 richness(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=1))
