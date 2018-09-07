@@ -1,6 +1,6 @@
 module EcoBase
 
-import Base: show
+import Base: show, view
 import RecipesBase
 
 include("DataTypes.jl")
