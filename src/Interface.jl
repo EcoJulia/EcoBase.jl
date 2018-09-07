@@ -16,15 +16,22 @@ nzrows(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 2) .> 0))
 nzcols(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 1) .> 0))
 nnz(a::AbstractArray) = Compat.sum(a .> 0)
 
-occurring(asm::AbstractAssemblage) = nzrows(occurrences(asm))
-occupied(asm::AbstractAssemblage) = nzcols(occurrences(asm))
+occurring(asm::AbstractAssemblage) = occurring(occurrences(asm))
+occurring(a::AbstractMatrix) = nzrows(a)
+occurring(asm::AbstractAssemblage, idx) = occurring(occurrences(asm), idx)
+
+occupied(asm::AbstractAssemblage) = occupied(occurrences(asm))
+occupied(asm::AbstractAssemblage, idx) = occupied(occurrences(asm), idx)
+occupied(a::AbstractMatrix) = nzcols(a)
+
 if VERSION < v"0.7.0-"
-    occupied(asm::AbstractAssemblage, idx) = collect(zip(findn(occurrences(asm)[idx, :])))
-    occurring(asm::AbstractAssemblage, idx) = collect(zip(findn(occurrences(asm)[:, idx])))
+    occupied(a::AbstractMatrix, idx) = collect(zip(findn(a[idx, :])))
+    occurring(a::AbstractMatrix, idx) = collect(zip(findn(a[:, idx])))
 else
-    occupied(asm::AbstractAssemblage, idx) = findall(!iszero, occurrences(asm)[idx, :])
-    occurring(asm::AbstractAssemblage, idx) = findall(!iszero, occurrences(asm)[:, idx])
+    occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
+    occurring(a::AbstractMatrix, idx) = findall(!iszero, a[:, idx])
 end
+
 noccurring(x) = length(occurring(x))
 noccupied(x) = length(occupied(x))
 noccurring(x, idx) = length(occurring(x, idx))
@@ -35,13 +42,16 @@ thingoccurrences(mat::AbstractMatrix, idx) = view(mat, idx, :)
 placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(asm), idx)
 placeoccurrences(mat::AbstractMatrix, idx) = view(occurrences(asm), :, idx) # make certain that the view implementation also takes thing or place names
 
-richness(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(Compat.sum(occurrences(asm), dims=1))
-richness(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=1))
+richness(asm::AbstractAssemblage) = richness(occurrences(asm))
+richness(a::AbstractMatrix{Bool}) = vec(Compat.sum(a, dims = 1))
+richness(a::AbstractMatrix) = vec(mapslices(nnz, a, dims = 1))
 
-occupancy(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(Compat.sum(occurrences(asm), dims=2))
-occupancy(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=2))
+occupancy(asm::AbstractAssemblage) = occupancy(occurrences(asm))
+occupancy(a::AbstractMatrix{Bool}) = vec(Compat.sum(a, dims=2))
+occupancy(a::AbstractMatrix) = vec(mapslices(nnz, a, dims=2))
 
-nrecords(asm::AbstractAssemblage) = nnz(occurrences(asm))
+nrecords(asm::AbstractAssemblage) = nrecords(occurrences(asm))
+nrecords(a::AbstractMatrix) = nnz(a)
 
 cooccurring(asm::AbstractAssemblage, inds...) = cooccurring(asm, [inds...])
 function cooccurring(asm::AbstractAssemblage, inds::AbstractVector)
