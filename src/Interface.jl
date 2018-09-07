@@ -1,16 +1,16 @@
 using Compat
 
 # Functions - most have to be implemented with the concrete type
-occurrences(asm::AbstractAssemblage) = error("function not defined for this type")
+occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defined for this type")
 view(asm::AbstractAssemblage) = error("function not defined for this type")
-places(asm::AbstractAssemblage) = error("function not defined for this type")
-things(asm::AbstractAssemblage) = error("function not defined for this type")
+places(asm::AbstractAssemblage)::AbstratPlaces = error("function not defined for this type")
+things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for this type")
 
-nplaces(plc::AbstractPlaces) = error("function not defined for this type")
-placenames(plc::AbstractPlaces) = error("function not defined for this type")
+nplaces(plc::AbstractPlaces)::Integer = error("function not defined for this type")
+placenames(plc::AbstractPlaces)::AbstractVector{<:String} = error("function not defined for this type")
 
-nthings(thg::AbstractThings) = error("function not defined for this type")
-thingnames(thg::AbstractThings) = error("function not defined for this type")
+nthings(thg::AbstractThings)::Integer = error("function not defined for this type")
+thingnames(thg::AbstractThings)::AbstractVector{<:String} = error("function not defined for this type")
 
 nzrows(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 2) .> 0))
 nzcols(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 1) .> 0))
