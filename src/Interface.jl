@@ -7,10 +7,15 @@ places(asm::AbstractAssemblage)::AbstractPlaces = error("function not defined fo
 things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for $(typeof(asm))")
 
 nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof(plc))")
+nplaces(plc::AbstractAssemblage) = nplaces(places(plc))
 placenames(plc::AbstractPlaces)::AbstractVector{<:String} = error("function not defined for $(typeof(plc))")
+placenames(plc::AbstractAssemblage) = placenames(places(plc))
+getcoords(plc::AbstractPlaces) = error("function not defined for $(typeof(plc))") # to get either Grid or other location data out of a Places object
 
 nthings(thg::AbstractThings)::Integer = error("function not defined for $(typeof(thg))")
+nthings(asm::AbstractAssemblage) = nthings(things(asm))
 thingnames(thg::AbstractThings)::AbstractVector{<:String} = error("function not defined for $(typeof(thg))")
+thingnames(asm::AbstractAssemblage) = thingnames(things(asm))
 
 nzrows(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 2) .> 0))
 nzcols(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 1) .> 0))
@@ -104,6 +109,6 @@ yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
 xmax(grd) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
 ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
 
-
-indices(grd::AbstractGrid, idx) = error("function not defined for $(typeof(grd))") #Implement this in SpatialEcology!
+indices(grd::AbstractGrid) = error("function not defined for $(typeof(grd))") 
+indices(grd::AbstractGrid, idx) = error("function not defined for $(typeof(grd))")
 coordinates(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
