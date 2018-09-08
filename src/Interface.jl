@@ -3,7 +3,7 @@ using Compat
 # Functions - most have to be implemented with the concrete type
 occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defined for $(typeof(asm))")
 view(asm::AbstractAssemblage) = error("function not defined for $(typeof(asm))")
-places(asm::AbstractAssemblage)::AbstratPlaces = error("function not defined for $(typeof(asm))")
+places(asm::AbstractAssemblage)::AbstractPlaces = error("function not defined for $(typeof(asm))")
 things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for $(typeof(asm))")
 
 nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof(plc))")
