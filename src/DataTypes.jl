@@ -42,7 +42,7 @@ abstract type AbstractLocations <: AbstractPlaces end
 Subtype of AbstractLocations that refers to a grid of regularly
 spaced, identically shaped, locations.
 """
-abstract type AbstractGrid <: AbstractLocations end
+abstract type AbstractGrid end
 
 """
     AbstractAssemblage{D <: Real (e.g. Int, Float64, Bool),

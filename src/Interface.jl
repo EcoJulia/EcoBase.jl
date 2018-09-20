@@ -1,48 +1,65 @@
 using Compat
 
 # Functions - most have to be implemented with the concrete type
-occurrences(asm::AbstractAssemblage) = error("function not defined for this type")
-view(asm::AbstractAssemblage) = error("function not defined for this type")
-places(asm::AbstractAssemblage) = error("function not defined for this type")
-things(asm::AbstractAssemblage) = error("function not defined for this type")
+occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defined for $(typeof(asm))")
+view(asm::AbstractAssemblage) = error("function not defined for $(typeof(asm))")
+places(asm::AbstractAssemblage)::AbstractPlaces = error("function not defined for $(typeof(asm))")
+things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for $(typeof(asm))")
 
-nplaces(plc::AbstractPlaces) = error("function not defined for this type")
-placenames(plc::AbstractPlaces) = error("function not defined for this type")
+nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof(plc))")
+nplaces(plc::AbstractAssemblage) = nplaces(places(plc))
+placenames(plc::AbstractPlaces)::AbstractVector{<:String} = error("function not defined for $(typeof(plc))")
+placenames(plc::AbstractAssemblage) = placenames(places(plc))
+getcoords(plc::AbstractPlaces) = error("function not defined for $(typeof(plc))") # to get either Grid or other location data out of a Places object
 
-nthings(thg::AbstractThings) = error("function not defined for this type")
-thingnames(thg::AbstractThings) = error("function not defined for this type")
+nthings(thg::AbstractThings)::Integer = error("function not defined for $(typeof(thg))")
+nthings(asm::AbstractAssemblage) = nthings(things(asm))
+thingnames(thg::AbstractThings)::AbstractVector{<:String} = error("function not defined for $(typeof(thg))")
+thingnames(asm::AbstractAssemblage) = thingnames(things(asm))
 
-nzrows(a::AbstractMatrix) = LinearIndices(Compat.sum(a .> 0, dims=2))[findall(Compat.sum(a .> 0, dims=2) .> 0)]
-nzcols(a::AbstractMatrix) = LinearIndices(Compat.sum(a .> 0, dims=1))[findall(Compat.sum(a .> 0, dims=1) .> 0)]
+nzrows(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 2) .> 0))
+nzcols(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 1) .> 0))
 nnz(a::AbstractArray) = Compat.sum(a .> 0)
 
-occurring(asm::AbstractAssemblage) = nzrows(occurrences(asm))
-occupied(asm::AbstractAssemblage) = nzcols(occurrences(asm))
+occurring(asm::AbstractAssemblage) = occurring(occurrences(asm))
+occurring(a::AbstractMatrix) = nzrows(a)
+occurring(asm::AbstractAssemblage, idx) = occurring(occurrences(asm), idx)
+
+occupied(asm::AbstractAssemblage) = occupied(occurrences(asm))
+occupied(asm::AbstractAssemblage, idx) = occupied(occurrences(asm), idx)
+occupied(a::AbstractMatrix) = nzcols(a)
+
 if VERSION < v"0.7.0-"
-    occupied(asm::AbstractAssemblage, idx) = collect(zip(findn(occurrences(asm)[idx, :])))
-    occurring(asm::AbstractAssemblage, idx) = collect(zip(findn(occurrences(asm)[:, idx])))
+    occupied(a::AbstractMatrix, idx) = collect(zip(findn(a[idx, :])))
+    occurring(a::AbstractMatrix, idx) = collect(zip(findn(a[:, idx])))
 else
-    occupied(asm::AbstractAssemblage, idx) = findall(!iszero, occurrences(asm)[idx, :])
-    occurring(asm::AbstractAssemblage, idx) = findall(!iszero, occurrences(asm)[:, idx])
+    occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
+    occurring(a::AbstractMatrix, idx) = findall(!iszero, a[:, idx])
 end
+
 noccurring(x) = length(occurring(x))
 noccupied(x) = length(occupied(x))
 noccurring(x, idx) = length(occurring(x, idx))
 noccupied(x, idx) = length(occupied(x, idx))
 
-thingoccurrences(asm::AbstractAssemblage, idx) = view(occurrences(asm), idx, :)
-placeoccurrences(asm::AbstractAssemblage, idx) = view(occurrences(asm), :, idx) # make certain that the view implementation also takes thing or place names
+thingoccurrences(asm::AbstractAssemblage, idx) = thingoccurrences(occurrences(asm), idx)
+thingoccurrences(mat::AbstractMatrix, idx) = view(mat, idx, :)
+placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(asm), idx)
+placeoccurrences(mat::AbstractMatrix, idx) = view(occurrences(asm), :, idx) # make certain that the view implementation also takes thing or place names
 
-richness(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(Compat.sum(occurrences(asm), dims=1))
-richness(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=1))
+richness(asm::AbstractAssemblage) = richness(occurrences(asm))
+richness(a::AbstractMatrix{Bool}) = vec(Compat.sum(a, dims = 1))
+richness(a::AbstractMatrix) = vec(mapslices(nnz, a, dims = 1))
 
-occupancy(asm::AbstractAssemblage{Bool, T, P}) where {T, P} = vec(Compat.sum(occurrences(asm), dims=2))
-occupancy(asm::AbstractAssemblage) = vec(mapslices(nnz, occurrences(asm), dims=2))
+occupancy(asm::AbstractAssemblage) = occupancy(occurrences(asm))
+occupancy(a::AbstractMatrix{Bool}) = vec(Compat.sum(a, dims=2))
+occupancy(a::AbstractMatrix) = vec(mapslices(nnz, a, dims=2))
 
-records(asm::AbstractAssemblage) = nnz(occurrences(asm))
+nrecords(asm::AbstractAssemblage) = nrecords(occurrences(asm))
+nrecords(a::AbstractMatrix) = nnz(a)
 
-cooccurring(asm::AbstractAssemblage, inds...) = cooccurring(asm, [inds...])
-function cooccurring(asm::AbstractAssemblage, inds::AbstractVector)
+cooccurring(asm, inds...) = cooccurring(asm, [inds...])
+function cooccurring(asm, inds::AbstractVector)
     sub = view(asm, species = inds)
     richness(sub) .== nthings(sub)
 end
@@ -74,22 +91,24 @@ placenames(asm::AbstractAssemblage, args...) = placenames(places(asm), args...)
 nthings(asm::AbstractAssemblage, args...) = nthings(things(asm), args...)
 thingnames(asm::AbstractAssemblage, args...) = thingnames(things(asm), args...)
 
+
 # TODO:
 # accessing cache
 
-xmin(grd::AbstractGrid) = error("function not defined for this type")
-ymin(grd::AbstractGrid) = error("function not defined for this type")
-xcellsize(grd::AbstractGrid) = error("function not defined for this type")
-ycellsize(grd::AbstractGrid) = error("function not defined for this type")
-xcells(grd::AbstractGrid) = error("function not defined for this type")
-ycells(grd::AbstractGrid) = error("function not defined for this type")
-cellsize(grd::AbstractGrid) = xcellsize(grd), ycellsize(grd)
-cells(grd::AbstractGrid) = xcells(grd), ycells(grd)
-xrange(grd::AbstractGrid) = xmin(grd):xcellsize(grd):xmax(grd) #includes intermediary points
-yrange(grd::AbstractGrid) = ymin(grd):ycellsize(grd):ymax(grd)
-xmax(grd::AbstractGrid) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
-ymax(grd::AbstractGrid) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
+# Methods for AbstractGrid
+xmin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+ymin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+xcellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+ycellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+xcells(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+ycells(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+cellsize(grd) = xcellsize(grd), ycellsize(grd)
+cells(grd) = xcells(grd), ycells(grd)
+xrange(grd) = xmin(grd):xcellsize(grd):xmax(grd) #includes intermediary points
+yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
+xmax(grd) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
+ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
 
-
-indices(grd::AbstractGrid, idx) = error("function not defined for this type") #Implement this in SpatialEcology!
-coordinates(grd::AbstractGrid) = error("function not defined for this type")
+indices(grd::AbstractGrid) = error("function not defined for $(typeof(grd))") 
+indices(grd::AbstractGrid, idx) = error("function not defined for $(typeof(grd))")
+coordinates(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
