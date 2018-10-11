@@ -45,7 +45,7 @@ noccupied(x, idx) = length(occupied(x, idx))
 thingoccurrences(asm::AbstractAssemblage, idx) = thingoccurrences(occurrences(asm), idx)
 thingoccurrences(mat::AbstractMatrix, idx) = view(mat, idx, :)
 placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(asm), idx)
-placeoccurrences(mat::AbstractMatrix, idx) = view(occurrences(asm), :, idx) # make certain that the view implementation also takes thing or place names
+placeoccurrences(mat::AbstractMatrix, idx) = view(mat, :, idx) # make certain that the view implementation also takes thing or place names
 
 richness(asm::AbstractAssemblage) = richness(occurrences(asm))
 richness(a::AbstractMatrix{Bool}) = vec(Compat.sum(a, dims = 1))
@@ -109,6 +109,6 @@ yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
 xmax(grd) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
 ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
 
-indices(grd::AbstractGrid) = error("function not defined for $(typeof(grd))") 
+indices(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 indices(grd::AbstractGrid, idx) = error("function not defined for $(typeof(grd))")
 coordinates(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
