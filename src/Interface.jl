@@ -112,7 +112,7 @@ xrange(grd) = xmin(grd):xcellsize(grd):xmax(grd) #includes intermediary points
 yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
 xmax(grd) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
 ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
-coordinates(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 
 indices(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 indices(grd::AbstractGrid, idx) = error("function not defined for $(typeof(grd))")
+coordinates(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
