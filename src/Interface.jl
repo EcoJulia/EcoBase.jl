@@ -95,6 +95,9 @@ thingnames(asm::AbstractAssemblage, args...) = thingnames(things(asm), args...)
 # TODO:
 # accessing cache
 
+# Methods for AbstractPlaces
+coordinates(grd::AbstractPlaces) = error("function not defined for $(typeof(grd))")
+
 # Methods for AbstractGrid
 xmin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 ymin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
@@ -111,4 +114,3 @@ ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
 
 indices(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 indices(grd::AbstractGrid, idx) = error("function not defined for $(typeof(grd))")
-coordinates(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
