@@ -37,9 +37,9 @@ quadrats (see AbstractGrid).
 abstract type AbstractLocations <: AbstractPlaces end
 
 """
-    AbstractGrid <: AbstractLocations <: AbstractPlaces
+    AbstractGrid
 
-Subtype of AbstractLocations that refers to a grid of regularly
+Composed within AbstractLocations and refers to a grid of regularly
 spaced, identically shaped, locations.
 """
 abstract type AbstractGrid end
