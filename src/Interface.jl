@@ -10,7 +10,6 @@ nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof
 nplaces(plc::AbstractAssemblage) = nplaces(places(plc))
 placenames(plc::AbstractPlaces)::AbstractVector{<:String} = error("function not defined for $(typeof(plc))")
 placenames(plc::AbstractAssemblage) = placenames(places(plc))
-getcoords(plc::AbstractPlaces) = error("function not defined for $(typeof(plc))") # to get either Grid or other location data out of a Places object
 
 nthings(thg::AbstractThings)::Integer = error("function not defined for $(typeof(thg))")
 nthings(asm::AbstractAssemblage) = nthings(things(asm))
@@ -96,7 +95,9 @@ thingnames(asm::AbstractAssemblage, args...) = thingnames(things(asm), args...)
 # accessing cache
 
 # Methods for AbstractPlaces
-coordinates(grd::AbstractPlaces) = error("function not defined for $(typeof(grd))")
+getcoords(plc::AbstractPlaces) = plc # Pure places generate their own fake location data
+getcoords(plc::AbstractLocations) = error("function not defined for $(typeof(plc))") # to get either Grid or other location data out of a AbstractLocations object
+coordinates(plc::AbstractPlaces) = error("function not defined for $(typeof(plc))")
 
 # Methods for AbstractGrid
 xmin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
@@ -111,6 +112,7 @@ xrange(grd) = xmin(grd):xcellsize(grd):xmax(grd) #includes intermediary points
 yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
 xmax(grd) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
 ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
+coordinates(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 
 indices(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 indices(grd::AbstractGrid, idx) = error("function not defined for $(typeof(grd))")
