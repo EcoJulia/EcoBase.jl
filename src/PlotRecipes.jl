@@ -24,17 +24,8 @@ RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPlaces)
     aspect_ratio --> :equal
     grid --> false
     marker_z := var
-    label --> ""
-    cd = coordinates(pnt)
-    cd[:,1], cd[:,2]
-end
-
-RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractLocations)
-    seriestype := :scatter
-    aspect_ratio --> :equal
-    grid --> false
-    marker_z := var
     legend --> false
+    colorbar --> true
     cd = coordinates(pnt)
     cd[:,1], cd[:,2]
 end
