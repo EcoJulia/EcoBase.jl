@@ -19,12 +19,13 @@ end
 #     ones(nsites(sit)), sit
 # end
 
-RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractLocations)
+RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPlaces)
     seriestype := :scatter
     aspect_ratio --> :equal
     grid --> false
     marker_z := var
     legend --> false
+    colorbar --> true
     cd = coordinates(pnt)
     cd[:,1], cd[:,2]
 end

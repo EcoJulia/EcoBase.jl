@@ -10,7 +10,6 @@ nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof
 nplaces(plc::AbstractAssemblage) = nplaces(places(plc))
 placenames(plc::AbstractPlaces)::AbstractVector{<:String} = error("function not defined for $(typeof(plc))")
 placenames(plc::AbstractAssemblage) = placenames(places(plc))
-getcoords(plc::AbstractPlaces) = error("function not defined for $(typeof(plc))") # to get either Grid or other location data out of a Places object
 
 nthings(thg::AbstractThings)::Integer = error("function not defined for $(typeof(thg))")
 nthings(asm::AbstractAssemblage) = nthings(things(asm))
@@ -94,6 +93,11 @@ thingnames(asm::AbstractAssemblage, args...) = thingnames(things(asm), args...)
 
 # TODO:
 # accessing cache
+
+# Methods for AbstractPlaces
+getcoords(plc::AbstractPlaces) = plc # Pure places generate their own fake location data
+getcoords(plc::AbstractLocations) = error("function not defined for $(typeof(plc))") # to get either Grid or other location data out of a AbstractLocations object
+coordinates(plc::AbstractPlaces) = error("function not defined for $(typeof(plc))")
 
 # Methods for AbstractGrid
 xmin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
