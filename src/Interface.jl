@@ -47,12 +47,12 @@ placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(as
 placeoccurrences(mat::AbstractMatrix, idx) = view(mat, :, idx) # make certain that the view implementation also takes thing or place names
 
 richness(asm::AbstractAssemblage) = richness(occurrences(asm))
-richness(a::AbstractMatrix{Bool}) = vec(Compat.sum(a, dims = 1))
-richness(a::AbstractMatrix) = vec(mapslices(nnz, a, dims = 1))
+richness(a::AbstractMatrix{Bool}) = collect(vec(Compat.sum(a, dims = 1)))
+richness(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims = 1)))
 
 occupancy(asm::AbstractAssemblage) = occupancy(occurrences(asm))
-occupancy(a::AbstractMatrix{Bool}) = vec(Compat.sum(a, dims=2))
-occupancy(a::AbstractMatrix) = vec(mapslices(nnz, a, dims=2))
+occupancy(a::AbstractMatrix{Bool}) = collect(vec(Compat.sum(a, dims=2)))
+occupancy(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims=2)))
 
 nrecords(asm::AbstractAssemblage) = nrecords(occurrences(asm))
 nrecords(a::AbstractMatrix) = nnz(a)
