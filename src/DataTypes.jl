@@ -13,20 +13,21 @@ things, etc.
 abstract type AbstractThings end
 
 """
-    AbstractPlaces
+    AbstractPlaces{LocationDataType <: Union{Nothing, AbstractLocationData}}
 
-Supertype for container of places where things are found (see
-AbstractThings). This will contain names or a reference for the
-places, and (optionally) metadata such as what kind of place these
-are, e.g. geographic locations (see AbstractLocations), where
-additional metadata will includes location data, animal ids for where
-the samples of things were retrieved from, etc.
-
-"""
-abstract type AbstractPlaces end
+AbstractPlaces is the supertype for containers of the places where things are
+found (see AbstractThings). This will contain names or a reference for the
+places, and (optionally) metadata such as what kind of place these are.
+AbstractPlaces is parameterised by the spatial location data type for the
+places. This should be Nothing if the places have no associated spatial data, or
+a subtype of AbstractLocationData if they have spatial data. Other metadata in
+the AbstractPlaces subtype should be in the AbstractPlaces subtype.
 
 """
-    AbstractLocations
+abstract type AbstractPlaces{LocationDataType <: Union{Nothing, AbstractLocationData}} end
+
+"""
+    AbstractLocationData
 
 Composed within AbstractPlaces in cases when geographic location data exists. It
 can reference locations with some geographical component. This may be a
@@ -34,15 +35,22 @@ series of arbitrarily arranged points, a series of areas, or even grid
 of regularly spaced quadrats (see subtype AbstractGrid).
 
 """
-abstract type AbstractLocations end
+abstract type AbstractLocationData end
 
 """
-    AbstractGrid <: AbstractPlaces
+    AbstractPoints <: AbstractLocationData
 
-Subtype of AbstractLocations when locations are a grid of regularly
+Subtype of AbstractLocationData where locations are a series of points in space.
+"""
+abstract type AbstractGrid <: AbstractLocationData end
+
+"""
+    AbstractGrid <: AbstractLocationData
+
+Subtype of AbstractLocationData where locations are a grid of regularly
 spaced, identically shaped, locations.
 """
-abstract type AbstractGrid <: AbstractLocations end
+abstract type AbstractGrid <: AbstractLocationData end
 
 """
     AbstractAssemblage{D <: Real (e.g. Int, Float64, Bool),
