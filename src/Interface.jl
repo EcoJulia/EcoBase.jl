@@ -96,7 +96,6 @@ thingnames(asm::AbstractAssemblage, args...) = thingnames(things(asm), args...)
 
 # Methods for AbstractPlaces
 getcoords(plc::AbstractPlaces) = plc # Pure places generate their own fake location data
-getcoords(plc::AbstractLocations) = error("function not defined for $(typeof(plc))") # to get either Grid or other location data out of a AbstractLocations object
 coordinates(plc::AbstractPlaces) = error("function not defined for $(typeof(plc))")
 
 # Methods for AbstractGrid

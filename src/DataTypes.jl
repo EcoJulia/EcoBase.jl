@@ -13,6 +13,17 @@ things, etc.
 abstract type AbstractThings end
 
 """
+    AbstractLocationData
+
+Composed within AbstractPlaces in cases when geographic location data exists. It
+can reference locations with some geographical component. This may be a
+series of arbitrarily arranged points, a series of areas, or even grid
+of regularly spaced quadrats (see subtype AbstractGrid).
+
+"""
+abstract type AbstractLocationData end
+
+"""
     AbstractPlaces{LocationDataType <: Union{Nothing, AbstractLocationData}}
 
 AbstractPlaces is the supertype for containers of the places where things are
@@ -27,22 +38,11 @@ the AbstractPlaces subtype should be in the AbstractPlaces subtype.
 abstract type AbstractPlaces{LocationDataType <: Union{Nothing, AbstractLocationData}} end
 
 """
-    AbstractLocationData
-
-Composed within AbstractPlaces in cases when geographic location data exists. It
-can reference locations with some geographical component. This may be a
-series of arbitrarily arranged points, a series of areas, or even grid
-of regularly spaced quadrats (see subtype AbstractGrid).
-
-"""
-abstract type AbstractLocationData end
-
-"""
     AbstractPoints <: AbstractLocationData
 
 Subtype of AbstractLocationData where locations are a series of points in space.
 """
-abstract type AbstractGrid <: AbstractLocationData end
+abstract type AbstractPoints <: AbstractLocationData end
 
 """
     AbstractGrid <: AbstractLocationData
