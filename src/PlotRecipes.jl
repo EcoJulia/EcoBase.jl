@@ -19,7 +19,7 @@ end
 #     ones(nsites(sit)), sit
 # end
 
-RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPlaces)
+RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPoints)
     seriestype := :scatter
     aspect_ratio --> :equal
     grid --> false
