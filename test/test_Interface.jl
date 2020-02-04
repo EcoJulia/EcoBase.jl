@@ -1,5 +1,5 @@
 module TestInterface
-using Compat.Test
+using Test
 
 # Checking interface through Diversity.jl
 using Diversity

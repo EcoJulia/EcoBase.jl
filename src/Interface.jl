@@ -1,4 +1,3 @@
-using Compat
 
 # Functions - most have to be implemented with the concrete type
 occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defined for $(typeof(asm))")
@@ -16,9 +15,9 @@ nthings(asm::AbstractAssemblage) = nthings(things(asm))
 thingnames(thg::AbstractThings)::AbstractVector{<:String} = error("function not defined for $(typeof(thg))")
 thingnames(asm::AbstractAssemblage) = thingnames(things(asm))
 
-nzrows(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 2) .> 0))
-nzcols(a::AbstractMatrix) = findall(vec(Compat.sum(a, dims = 1) .> 0))
-nnz(a::AbstractArray) = Compat.sum(a .> 0)
+nzrows(a::AbstractMatrix) = findall(vec(sum(a, dims = 2) .> 0))
+nzcols(a::AbstractMatrix) = findall(vec(sum(a, dims = 1) .> 0))
+nnz(a::AbstractArray) = sum(a .> 0)
 
 occurring(asm::AbstractAssemblage) = occurring(occurrences(asm))
 occurring(a::AbstractMatrix) = nzrows(a)
@@ -28,13 +27,8 @@ occupied(asm::AbstractAssemblage) = occupied(occurrences(asm))
 occupied(asm::AbstractAssemblage, idx) = occupied(occurrences(asm), idx)
 occupied(a::AbstractMatrix) = nzcols(a)
 
-if VERSION < v"0.7.0-"
-    occupied(a::AbstractMatrix, idx) = collect(zip(findn(a[idx, :])))
-    occurring(a::AbstractMatrix, idx) = collect(zip(findn(a[:, idx])))
-else
-    occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
-    occurring(a::AbstractMatrix, idx) = findall(!iszero, a[:, idx])
-end
+occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
+occurring(a::AbstractMatrix, idx) = findall(!iszero, a[:, idx])
 
 noccurring(x) = length(occurring(x))
 noccupied(x) = length(occupied(x))
@@ -47,11 +41,11 @@ placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(as
 placeoccurrences(mat::AbstractMatrix, idx) = view(mat, :, idx) # make certain that the view implementation also takes thing or place names
 
 richness(asm::AbstractAssemblage) = richness(occurrences(asm))
-richness(a::AbstractMatrix{Bool}) = collect(vec(Compat.sum(a, dims = 1)))
+richness(a::AbstractMatrix{Bool}) = collect(vec(sum(a, dims = 1)))
 richness(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims = 1)))
 
 occupancy(asm::AbstractAssemblage) = occupancy(occurrences(asm))
-occupancy(a::AbstractMatrix{Bool}) = collect(vec(Compat.sum(a, dims=2)))
+occupancy(a::AbstractMatrix{Bool}) = collect(vec(sum(a, dims=2)))
 occupancy(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims=2)))
 
 nrecords(asm::AbstractAssemblage) = nrecords(occurrences(asm))
@@ -69,7 +63,6 @@ function createsummaryline(vec::AbstractVector{<:AbstractString})
     length(vec) < 6 && return linefunc(vec)
     linefunc(vec[1:3]) * "..." * linefunc(vec[(end-1):end])
 end
-
 
 function show(io::IO, asm::T) where T <: AbstractAssemblage
     tn = createsummaryline(thingnames(asm))

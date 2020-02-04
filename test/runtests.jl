@@ -1,6 +1,3 @@
-using Compat
-using Compat.Test
-using Compat: @info
 
 # Identify files in test/ that are testing matching files in src/
 #  - src/Source.jl will be matched by test/test_Source.jl
