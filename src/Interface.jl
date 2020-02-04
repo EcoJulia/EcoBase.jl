@@ -1,4 +1,12 @@
 
+asindices(x::AbstractArray{T}) where T <: Union{Missing, Integer} = x
+asindices(x::AbstractArray{Union{Missing, Bool}})  = findall(y->!ismissing(y) && y, x)
+asindices(x::AbstractArray{T}) where T <: Bool = findall(x)
+asindices(x, y) = asindices(x)
+asindices(x::AbstractArray{T}, y::AbstractArray{T}) where T <: Union{Missing, AbstractString} = [el for el in indexin(x, y) if el !== nothing]
+asindices(x::AbstractArray{T}, y::AbstractArray{<:AbstractString}) where T <: Union{Missing, Symbol} = asindices(string.(x), y)
+asindices(x::T, y::AbstractArray) where T <: Union{Missing, Symbol, AbstractString} = asindices([x], y)
+
 # Functions - most have to be implemented with the concrete type
 occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defined for $(typeof(asm))")
 view(asm::AbstractAssemblage) = error("function not defined for $(typeof(asm))")
@@ -21,10 +29,10 @@ nnz(a::AbstractArray) = sum(a .> 0)
 
 occurring(asm::AbstractAssemblage) = occurring(occurrences(asm))
 occurring(a::AbstractMatrix) = nzrows(a)
-occurring(asm::AbstractAssemblage, idx) = occurring(occurrences(asm), idx)
+occurring(asm::AbstractAssemblage, idx) = occurring(occurrences(asm), asindices(idx, placenames(asm)))
 
 occupied(asm::AbstractAssemblage) = occupied(occurrences(asm))
-occupied(asm::AbstractAssemblage, idx) = occupied(occurrences(asm), idx)
+occupied(asm::AbstractAssemblage, idx) = occupied(occurrences(asm), asindices(idx, thingnames(asm)))
 occupied(a::AbstractMatrix) = nzcols(a)
 
 occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
@@ -35,9 +43,9 @@ noccupied(x) = length(occupied(x))
 noccurring(x, idx) = length(occurring(x, idx))
 noccupied(x, idx) = length(occupied(x, idx))
 
-thingoccurrences(asm::AbstractAssemblage, idx) = thingoccurrences(occurrences(asm), idx)
+thingoccurrences(asm::AbstractAssemblage, idx) = thingoccurrences(occurrences(asm), asindices(idx, thingnames(asm)))
 thingoccurrences(mat::AbstractMatrix, idx) = view(mat, idx, :)
-placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(asm), idx)
+placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(asm), asindices(idx, placenames(asm)))
 placeoccurrences(mat::AbstractMatrix, idx) = view(mat, :, idx) # make certain that the view implementation also takes thing or place names
 
 richness(asm::AbstractAssemblage) = richness(occurrences(asm))
