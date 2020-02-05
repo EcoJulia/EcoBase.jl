@@ -1,11 +1,11 @@
-
+asindices(x::Integer) = x
 asindices(x::AbstractArray{T}) where T <: Union{Missing, Integer} = x
 asindices(x::AbstractArray{Union{Missing, Bool}})  = findall(y->!ismissing(y) && y, x)
 asindices(x::AbstractArray{T}) where T <: Bool = findall(x)
 asindices(x, y) = asindices(x)
 asindices(x::AbstractArray{T}, y::AbstractArray{T}) where T <: Union{Missing, AbstractString} = [el for el in indexin(x, y) if el !== nothing]
 asindices(x::AbstractArray{T}, y::AbstractArray{<:AbstractString}) where T <: Union{Missing, Symbol} = asindices(string.(x), y)
-asindices(x::T, y::AbstractArray) where T <: Union{Missing, Symbol, AbstractString} = asindices([x], y)
+asindices(x::T, y::AbstractArray) where T <: Union{Missing, Symbol, AbstractString} = first(asindices([x], y))
 
 # Functions - most have to be implemented with the concrete type
 occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defined for $(typeof(asm))")

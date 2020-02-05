@@ -4,20 +4,20 @@ keywords = ["macroecology", "ecology", "biology", "geography"]
 license = "MIT"
 desc = "Base package with abstract types for ecology"
 authors = ["mkborregaard <mkborregaard@sund.ku.dk", "RichardReeve <Richard.Reeve@glasgow.ac.uk>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
-julia = "1.0"
-SpatialEcology = "0.9"
 Diversity = "0.5"
 RecipesBase = "0.7"
+SpatialEcology = "0.9"
+julia = "1.0"
 
 [extras]
-SpatialEcology = "348f2d5d-71a3-5ad4-b565-8af070f99681"
 Diversity = "d3d5718d-52de-57ab-b67a-eca7fd6175a4"
+SpatialEcology = "348f2d5d-71a3-5ad4-b565-8af070f99681"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
