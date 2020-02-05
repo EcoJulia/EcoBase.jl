@@ -1,5 +1,5 @@
 name = "EcoBase"
-uuid = "196f2941-2d58-45ba-9f13-43a2532b2fa8"
+uuid = "a58aae7d-b440-5a11-b283-399458f99aac"
 keywords = ["macroecology", "ecology", "biology", "geography"]
 license = "MIT"
 desc = "Base package with abstract types for ecology"
