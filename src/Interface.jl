@@ -12,8 +12,13 @@ occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defin
 view(asm::AbstractAssemblage) = error("function not defined for $(typeof(asm))")
 places(asm::AbstractAssemblage)::AbstractPlaces = error("function not defined for $(typeof(asm))")
 things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for $(typeof(asm))")
+
+# for custom printing
 thingkind(asm::AbstractAssemblage) = "thing"
 placekind(asm::AbstractAssemblage) = "place"
+thingkindplural(asm::AbstractAssemblage) = "$(thingkind(asm))s"
+placekindplural(asm::AbstractAssemblage) = "$(placekind(asm))s"
+
 
 nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof(plc))")
 nplaces(plc::AbstractAssemblage) = nplaces(places(plc))
@@ -78,9 +83,11 @@ function show(io::IO, asm::T) where T <: AbstractAssemblage
     tn = createsummaryline(thingnames(asm))
     pn = createsummaryline(placenames(asm))
     thing = titlecase(thingkind(asm))
+    things = thingkindplural(asm)
     place = titlecase(placekind(asm))
+    places = placekindplural(asm)
     println(io,
-    """$T with $(nthings(asm)) $(thing)s in $(nplaces(asm)) $(place)s
+    """$T with $(nthings(asm)) $things in $(nplaces(asm)) $places
 
     $thing names:
     $(tn)
