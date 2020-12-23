@@ -80,7 +80,7 @@ function show(io::IO, asm::T) where T <: AbstractAssemblage
     thing = titlecase(thingkind(asm))
     place = titlecase(placekind(asm))
     println(io,
-    """$T with $(nthings(asm)) things in $(nplaces(asm)) places
+    """$T with $(nthings(asm)) $(thing)s in $(nplaces(asm)) $(place)s
 
     $thing names:
     $(tn)
