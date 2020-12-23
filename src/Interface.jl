@@ -12,6 +12,8 @@ occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defin
 view(asm::AbstractAssemblage) = error("function not defined for $(typeof(asm))")
 places(asm::AbstractAssemblage)::AbstractPlaces = error("function not defined for $(typeof(asm))")
 things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for $(typeof(asm))")
+thingkind(asm::AbstractAssemblage) = "thing"
+placekind(asm::AbstractAssemblage) = "place"
 
 nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof(plc))")
 nplaces(plc::AbstractAssemblage) = nplaces(places(plc))
@@ -75,13 +77,15 @@ end
 function show(io::IO, asm::T) where T <: AbstractAssemblage
     tn = createsummaryline(thingnames(asm))
     pn = createsummaryline(placenames(asm))
+    thing = titlecase(thingkind(asm))
+    place = titlecase(placekind(asm))
     println(io,
     """$T with $(nthings(asm)) things in $(nplaces(asm)) places
 
-    Thing names:
+    $thing names:
     $(tn)
 
-    Place names:
+    $place names:
     $(pn)
     """)
 end
