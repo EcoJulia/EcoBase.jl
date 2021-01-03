@@ -13,6 +13,13 @@ view(asm::AbstractAssemblage) = error("function not defined for $(typeof(asm))")
 places(asm::AbstractAssemblage)::AbstractPlaces = error("function not defined for $(typeof(asm))")
 things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for $(typeof(asm))")
 
+# for custom printing
+thingkind(asm::AbstractAssemblage) = "thing"
+placekind(asm::AbstractAssemblage) = "place"
+thingkindplural(asm::AbstractAssemblage) = "$(thingkind(asm))s"
+placekindplural(asm::AbstractAssemblage) = "$(placekind(asm))s"
+
+
 nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof(plc))")
 nplaces(plc::AbstractAssemblage) = nplaces(places(plc))
 placenames(plc::AbstractPlaces)::AbstractVector{<:String} = error("function not defined for $(typeof(plc))")
@@ -75,13 +82,17 @@ end
 function show(io::IO, asm::T) where T <: AbstractAssemblage
     tn = createsummaryline(thingnames(asm))
     pn = createsummaryline(placenames(asm))
+    thing = titlecase(thingkind(asm))
+    things = thingkindplural(asm)
+    place = titlecase(placekind(asm))
+    places = placekindplural(asm)
     println(io,
-    """$T with $(nthings(asm)) things in $(nplaces(asm)) places
+    """$T with $(nthings(asm)) $things in $(nplaces(asm)) $places
 
-    Thing names:
+    $thing names:
     $(tn)
 
-    Place names:
+    $place names:
     $(pn)
     """)
 end
