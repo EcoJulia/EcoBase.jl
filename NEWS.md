@@ -4,6 +4,7 @@
   - Improve printing
   - Update GitHub workflows
   - Add Zenodo metadata
+  - Fix testing and coverage checking to use GitHub workflows
 - v0.1.3
   - CompatHelper fixes
 - v0.1.2
