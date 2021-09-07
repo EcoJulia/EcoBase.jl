@@ -16,7 +16,7 @@ using EcoBase
     communities = map(n -> "SC $n", 1:numcommunities)
     #ut = UniqueTypes(species)
     #sc = Subcommunities(communities)
-    mc = ComMatrix(manyweights, specnames = species, sitenames = communities)
+    mc = ComMatrix(manyweights, species, communities)
 
     @test all(EcoBase.thingnames(mc) .== species)
     @test all(EcoBase.placenames(mc) .== communities)
@@ -26,7 +26,7 @@ using EcoBase
     fewerweights = deepcopy(manyweights)
     fewerweights[1, 1] = 0
     fewerweights /= sum(fewerweights)
-    fmc = ComMatrix(fewerweights, specnames = species, sitenames = communities)
+    fmc = ComMatrix(fewerweights, species, communities)
 
     @test EcoBase.noccupied(fmc) == numcommunities
     @test EcoBase.noccurring(fmc) == numspecies
