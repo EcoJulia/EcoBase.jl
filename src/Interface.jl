@@ -42,6 +42,8 @@ occupied(asm::AbstractAssemblage) = occupied(occurrences(asm))
 occupied(asm::AbstractAssemblage, idx) = occupied(occurrences(asm), asindices(idx, thingnames(asm)))
 occupied(a::AbstractMatrix) = nzcols(a)
 
+occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
+occurring(a::AbstractMatrix, idx) = findall(!iszero, a[:, idx])
 occupied(a::AbstractMatrix, idx::AbstractVector) = nzcols(a[idx, :])
 occurring(a::AbstractMatrix, idx::AbstractVector) = nzrows(a[:, idx])
 
