@@ -44,6 +44,8 @@ occupied(a::AbstractMatrix) = nzcols(a)
 
 occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
 occurring(a::AbstractMatrix, idx) = findall(!iszero, a[:, idx])
+occupied(a::AbstractMatrix, idx::AbstractVector) = nzcols(a[idx, :])
+occurring(a::AbstractMatrix, idx::AbstractVector) = nzrows(a[:, idx])
 
 noccurring(x) = length(occurring(x))
 noccupied(x) = length(occupied(x))
