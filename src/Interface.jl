@@ -33,10 +33,12 @@ thingnames(asm::AbstractAssemblage) = thingnames(things(asm))
 nzrows(a::AbstractMatrix) = findall(vec(sum(a, dims = 2) .> 0))
 nzcols(a::AbstractMatrix) = findall(vec(sum(a, dims = 1) .> 0))
 nnz(a::AbstractArray) = sum(a .> 0)
+colsum(x) = sum(x, dims = 1)
+rowsum(x) = sum(x, dims = 2)
 
 occurring(asm::AbstractAssemblage) = occurring(occurrences(asm))
-occurring(a::AbstractMatrix) = nzrows(a)
 occurring(asm::AbstractAssemblage, idx) = occurring(occurrences(asm), asindices(idx, placenames(asm)))
+occurring(a::AbstractMatrix) = nzrows(a)
 
 occupied(asm::AbstractAssemblage) = occupied(occurrences(asm))
 occupied(asm::AbstractAssemblage, idx) = occupied(occurrences(asm), asindices(idx, thingnames(asm)))
@@ -58,11 +60,11 @@ placeoccurrences(asm::AbstractAssemblage, idx) = placeoccurrences(occurrences(as
 placeoccurrences(mat::AbstractMatrix, idx) = view(mat, :, idx) # make certain that the view implementation also takes thing or place names
 
 richness(asm::AbstractAssemblage) = richness(occurrences(asm))
-richness(a::AbstractMatrix{Bool}) = collect(vec(sum(a, dims = 1)))
+richness(a::AbstractMatrix{Bool}) = collect(vec(colsum(a)))
 richness(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims = 1)))
 
 occupancy(asm::AbstractAssemblage) = occupancy(occurrences(asm))
-occupancy(a::AbstractMatrix{Bool}) = collect(vec(sum(a, dims=2)))
+occupancy(a::AbstractMatrix{Bool}) = collect(vec(rowsum(a)))
 occupancy(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims=2)))
 
 nrecords(asm::AbstractAssemblage) = nrecords(occurrences(asm))
