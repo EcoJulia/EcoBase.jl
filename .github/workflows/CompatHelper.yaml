@@ -3,7 +3,7 @@ name: CompatHelper
 on:
   push:
     branches:
-      - dev
+      - main
   schedule:
     - cron: '0 4 * * *'  # Daily at 4 AM
 
