@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 
 """
     AbstractThings
@@ -36,7 +37,8 @@ a subtype of AbstractLocationData if they have spatial data. Other metadata in
 the AbstractPlaces subtype should be in the AbstractPlaces subtype.
 
 """
-abstract type AbstractPlaces{LocationDataType <: Union{Nothing, AbstractLocationData}} end
+abstract type AbstractPlaces{LocationDataType <:
+                             Union{Nothing, AbstractLocationData}} end
 
 """
     AbstractPoints <: AbstractLocationData
