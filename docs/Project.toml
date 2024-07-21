@@ -1,0 +1,8 @@
+[deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+EcoBase = "a58aae7d-b440-5a11-b283-399458f99aac"
+JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+ResearchSoftwareMetadata = "58378933-4625-47fa-851e-05ee27d397bd"
