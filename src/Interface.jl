@@ -53,10 +53,10 @@ colsum(x) = sum(x, dims = 1)
 rowsum(x) = sum(x, dims = 2)
 
 occurring(asm::AbstractAssemblage) = occurring(occurrences(asm))
-occurring(a::AbstractMatrix) = nzrows(a)
 function occurring(asm::AbstractAssemblage, idx)
     return occurring(occurrences(asm), asindices(idx, placenames(asm)))
 end
+occurring(a::AbstractMatrix) = nzrows(a)
 
 occupied(asm::AbstractAssemblage) = occupied(occurrences(asm))
 function occupied(asm::AbstractAssemblage, idx)
@@ -114,15 +114,16 @@ function show(io::IO, asm::T) where {T <: AbstractAssemblage}
     things = thingkindplural(asm)
     place = titlecase(placekind(asm))
     places = placekindplural(asm)
-    return println(io,
-                   """$T with $(nthings(asm)) $things in $(nplaces(asm)) $places
+    println(io,
+            """$T with $(nthings(asm)) $things in $(nplaces(asm)) $places
 
-                   $thing names:
-                   $(tn)
+            $thing names:
+            $(tn)
 
-                   $place names:
-                   $(pn)
-                   """)
+            $place names:
+            $(pn)
+            """)
+    return nothing
 end
 
 nplaces(asm::AbstractAssemblage, args...) = nplaces(places(asm), args...)
