@@ -1,30 +1,41 @@
 {
-    "title": "EcoBase.jl - A package implementing an abstract interface to data types used in ecological analyses",
-    "description": "This package implements an abstract interface to data types used in ecological analyses in Julia",
+    "title": "EcoBase.jl",
     "upload_type": "software",
     "creators": [
         {
-            "affiliation": "GLOBE Institute, University of Copenhagen",
-            "name": "Borregaard, Michael Krabbe",
-            "orcid": "0000-0002-8146-8435"
+            "name": "Borregaard, Michael",
+            "orcid": "0000-0002-8146-8435",
+            "affiliation": "University of Copenhagen",
+            "ror": "035b05819"
         },
         {
-            "affiliation": "University of Glasgow",
             "name": "Reeve, Richard",
-            "orcid": "0000-0003-2589-8091"
+            "orcid": "0000-0003-2589-8091",
+            "affiliation": "University of Glasgow",
+            "ror": "00vtgdb53"
+        },
+        {
+            "name": "Bonham, Kevin",
+            "orcid": "0000-0003-3200-7533",
+            "affiliation": "Wellesley College",
+            "ror": "01srpnj69"
         }
     ],
     "access_right": "open",
-    "license": "mit-license",
+    "license": "MIT",
     "related_identifiers": [
         {
             "scheme": "url",
             "identifier": "https://github.com/EcoJulia/EcoBase.jl",
-            "relation": "isIdenticalTo"
+            "relation": "isOriginalFormOf"
         }
     ],
     "keywords": [
+        "EcoJulia",
+        "biology",
+        "ecology",
+        "geography",
         "julia",
-        "ecology"
+        "macroecology"
     ]
 }

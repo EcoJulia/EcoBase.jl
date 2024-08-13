@@ -1,24 +1,55 @@
 name = "EcoBase"
 uuid = "a58aae7d-b440-5a11-b283-399458f99aac"
-keywords = ["macroecology", "ecology", "biology", "geography"]
 license = "MIT"
+authors = ["Michael Borregaard", "Richard Reeve <richard.reeve@glasgow.ac.uk>", "Kevin Bonham <kbonham@wellesley.edu>"]
+version = "0.1.7"
+keywords = ["macroecology", "ecology", "biology", "geography", "julia", "EcoJulia"]
 desc = "Base package with abstract types for ecology"
-authors = ["mkborregaard <mkborregaard@sund.ku.dk", "Richard Reeve <Richard.Reeve@glasgow.ac.uk>", "Kevin Bonham <kbonham@wellesley.edu>"]
-version = "0.1.6"
 
 [deps]
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
 Diversity = "0.5"
+Git = "1"
+JuliaFormatter = "1"
+Logging = "1"
+Pkg = "1"
+Random = "1"
 RecipesBase = "0.7, 0.8, 0.9, 1"
+ResearchSoftwareMetadata = "0.1.1"
 SpatialEcology = "0.9"
 julia = "1"
 
+[[author_details]]
+name = "Michael Borregaard"
+orcid = "0000-0002-8146-8435"
+
+    [[author_details.affiliation]]
+    ror = "035b05819"
+[[author_details]]
+name = "Richard Reeve"
+orcid = "0000-0003-2589-8091"
+
+    [[author_details.affiliation]]
+    ror = "00vtgdb53"
+[[author_details]]
+name = "Kevin Bonham"
+orcid = "0000-0003-3200-7533"
+
+    [[author_details.affiliation]]
+    ror = "01srpnj69"
+
 [extras]
 Diversity = "d3d5718d-52de-57ab-b67a-eca7fd6175a4"
+Git = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
+JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ResearchSoftwareMetadata = "58378933-4625-47fa-851e-05ee27d397bd"
 SpatialEcology = "348f2d5d-71a3-5ad4-b565-8af070f99681"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["SpatialEcology", "Diversity", "Test"]
+test = ["SpatialEcology", "Diversity", "Git", "JuliaFormatter", "Logging", "Pkg", "Random", "ResearchSoftwareMetadata", "Test"]

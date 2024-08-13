@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+
 module TestInterface
 using Test
 
@@ -21,8 +23,10 @@ using EcoBase
     @test all(EcoBase.thingnames(mc) .== species)
     @test all(EcoBase.placenames(mc) .== communities)
     @test all(EcoBase.occurrences(mc) .≈ manyweights)
-    @test all(EcoBase.richness(mc) .== repeat([numspecies], inner=numcommunities))
-    @test all(EcoBase.occupancy(mc) .== repeat([numcommunities], inner=numspecies))
+    @test all(EcoBase.richness(mc) .==
+              repeat([numspecies], inner = numcommunities))
+    @test all(EcoBase.occupancy(mc) .==
+              repeat([numcommunities], inner = numspecies))
     fewerweights = deepcopy(manyweights)
     fewerweights[1, 1] = 0
     fewerweights /= sum(fewerweights)
@@ -51,8 +55,8 @@ end
     @test all(thingnames(mc) .== species)
     @test all(placenames(mc) .== communities)
     @test all(occurrences(mc) .≈ manyweights)
-    @test all(richness(mc) .== repeat([numspecies], inner=numcommunities))
-    @test all(occupancy(mc) .== repeat([numcommunities], inner=numspecies))
+    @test all(richness(mc) .== repeat([numspecies], inner = numcommunities))
+    @test all(occupancy(mc) .== repeat([numcommunities], inner = numspecies))
     fewerweights = deepcopy(manyweights)
     fewerweights[1, 1] = 0
     fewerweights /= sum(fewerweights)
