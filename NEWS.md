@@ -1,5 +1,11 @@
 # NEWS
 
+- v0.1.7
+  - Add in metadata
+- v0.1.6
+  - Bugfixes
+- v0.1.5
+  - Bugfixes
 - v0.1.4
   - Improve printing
   - Update GitHub workflows
