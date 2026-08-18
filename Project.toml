@@ -1,7 +1,7 @@
 name = "EcoBase"
 uuid = "a58aae7d-b440-5a11-b283-399458f99aac"
 license = "MIT"
-authors = ["Michael Borregaard", "Richard Reeve <richard.reeve@glasgow.ac.uk>", "Kevin Bonham <kbonham@wellesley.edu>"]
+authors = ["Michael Borregaard", "Richard Reeve <richard.reeve@glasgow.ac.uk>", "Kevin Bonham <kevin.bonham@tuftsmedicine.org>"]
 version = "0.1.7"
 keywords = ["macroecology", "ecology", "biology", "geography", "julia", "EcoJulia"]
 desc = "Base package with abstract types for ecology"
