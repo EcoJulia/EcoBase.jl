@@ -178,21 +178,28 @@ end
 """
     indices(grd, order)
     indices(grd, i, order)
+    indices(grd, order, anchor)
 
 Return the cell indices of `grd` with its two columns in the requested
 AbstractCoordinateOrder, or column `i` of them.
 
-The indices() counterpart of coordinates(loc, order). ⚠️ Note that the second
+The indices() counterpart of coordinates(loc, order). Note that the second
 argument means different things by type: an AbstractCoordinateOrder asks for
 the whole matrix reordered, while an integer asks for that one column in the
 grid's own native order.
 
 """
-function indices(grd::AbstractGrid, want::AbstractCoordinateOrder)
+function indices(grd::AbstractGridded, want::AbstractCoordinateOrder)
     return _incolumnorder(indices(grd), coordinateorder(grd), want)
 end
-function indices(grd::AbstractGrid, i, want::AbstractCoordinateOrder)
+function indices(grd::AbstractGridded, i, want::AbstractCoordinateOrder)
     return _incolumnorder(indices(grd), coordinateorder(grd), want)[:, i]
+end
+# Deliberately NOT delegating to the two-argument form above, which would
+# inherit its ambiguity for exactly the grids this method exists to serve.
+function indices(grd::AbstractGridded, want::AbstractCoordinateOrder,
+                 ::AbstractCellAnchor)
+    return _incolumnorder(indices(grd), coordinateorder(grd), want)
 end
 
 # Put the two columns of a location data matrix into the wanted order. Two
@@ -205,24 +212,159 @@ function _incolumnorder(cols, ::AbstractCoordinateOrder,
     return cols[:, [2, 1]]
 end
 
-# Methods for AbstractGrid
+# Methods for AbstractGridded — the index contract, which every kind of grid
+# answers whatever its spacing
+xcells(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+ycells(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+indices(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+function indices(grd::AbstractGridded, idx)
+    return error("function not defined for $(typeof(grd))")
+end
+function coordinates(grd::AbstractGridded)
+    return error("function not defined for $(typeof(grd))")
+end
+cellsize(grd) = xcellsize(grd), ycellsize(grd)
+cells(grd) = xcells(grd), ycells(grd)
+
+"""
+    cellanchor(grd)
+
+Return what a cell's reported coordinate refers to within that cell, as an
+AbstractCellAnchor.
+
+A grid labels each cell with a single coordinate, and EcoBase does not require
+that to be the cell's centre: a type declares its own by adding a method here.
+Defaults to CellCentre(), so a grid that says nothing is read as labelling its
+cells by their centres. This governs every coordinate reported for the grid —
+xrange(), coordinates(), and the edges derived from them — not just one.
+
+"""
+cellanchor(::AbstractGridded) = CellCentre()
+
+"""
+    xedges(grd)
+    yedges(grd)
+
+Return the cell boundaries of `grd` along x or y: one MORE value than there are
+cells, since n cells have n + 1 edges between and around them.
+
+This is what xrange() cannot be. xrange() gives one coordinate per cell
+whatever the anchor, so the two differ by exactly the final edge — and on a
+rectilinear grid that edge cannot be recovered from the cell coordinates, since
+the last cell's width is not among their differences. A regular grid needs no
+method here: EcoBase derives its edges from the cell size.
+
+"""
+xedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+yedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+
+"""
+    xrange(grd, anchor)
+    yrange(grd, anchor)
+
+Return one coordinate per cell along x or y, referring to the requested
+AbstractCellAnchor rather than to whichever the grid itself declares.
+
+"""
+function xrange(grd::AbstractGridded, want::AbstractCellAnchor)
+    return _atedges(xedges(grd), want)
+end
+function yrange(grd::AbstractGridded, want::AbstractCellAnchor)
+    return _atedges(yedges(grd), want)
+end
+
+# One coordinate per cell, taken from that cell's own pair of edges.
+_atedges(edges, ::CellCorner) = edges[1:(end - 1)]
+_atedges(edges, ::CellCentre) = (edges[1:(end - 1)] .+ edges[2:end]) ./ 2
+
+"""
+    coordinates(grd, anchor)
+    coordinates(grd, order, anchor)
+
+Return the coordinates of `grd` referring to the requested AbstractCellAnchor,
+and with its columns in the requested AbstractCoordinateOrder if one is given.
+
+"""
+function coordinates(grd::AbstractGridded, want::AbstractCellAnchor)
+    return coordinates(grd, coordinateorder(grd), want)
+end
+function coordinates(grd::AbstractGridded, order::AbstractCoordinateOrder,
+                     want::AbstractCellAnchor)
+    xy = coordinates(grd, XThenY())
+    from = cellanchor(grd)
+    xs = _atanchor(xy[:, 1], _xwidths(grd), from, want)
+    ys = _atanchor(xy[:, 2], _ywidths(grd), from, want)
+    return _incolumnorder(hcat(xs, ys), XThenY(), order)
+end
+
+# Move coordinates from the anchor they were reported at to the one wanted.
+# The width is a scalar for a regular grid and one value per place for a
+# rectilinear one, so this broadcasts over either.
+_atanchor(vals, width, ::A, ::A) where {A <: AbstractCellAnchor} = vals
+_atanchor(vals, width, ::CellCentre, ::CellCorner) = vals .- width ./ 2
+_atanchor(vals, width, ::CellCorner, ::CellCentre) = vals .+ width ./ 2
+
+# Methods for AbstractGrid — the regularly spaced case
 xmin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 ymin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 xcellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 ycellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
-xcells(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
-ycells(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
-cellsize(grd) = xcellsize(grd), ycellsize(grd)
-cells(grd) = xcells(grd), ycells(grd)
 xrange(grd) = xmin(grd):xcellsize(grd):xmax(grd) #includes intermediary points
 yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
 xmax(grd) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
 ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
 
-indices(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
-function indices(grd::AbstractGrid, idx)
-    return error("function not defined for $(typeof(grd))")
+# Every cell is the same size, so the edges follow from the first label, that
+# size and the count, and the type need supply nothing.
+function xedges(grd::AbstractGrid)
+    return _regularedges(xmin(grd), xcellsize(grd), xcells(grd),
+                         cellanchor(grd))
 end
-function coordinates(grd::AbstractGrid)
-    return error("function not defined for $(typeof(grd))")
+function yedges(grd::AbstractGrid)
+    return _regularedges(ymin(grd), ycellsize(grd), ycells(grd),
+                         cellanchor(grd))
 end
+
+function _regularedges(lo, size, n, anchor)
+    return range(_firstedge(lo, size, anchor), step = size, length = n + 1)
+end
+
+# Where the first edge sits relative to the first cell's own label.
+_firstedge(lo, size, ::CellCentre) = lo - size / 2
+_firstedge(lo, size, ::CellCorner) = lo
+
+# The width of the cell a place sits in, along one axis — constant here.
+_xwidths(grd::AbstractGrid) = xcellsize(grd)
+_ywidths(grd::AbstractGrid) = ycellsize(grd)
+
+# Methods for AbstractRectilinearGrid — cells vary, so everything derives from
+# the edges rather than from a single cell size
+#
+# Note: xrange and yrange MUST be given here. Without them a rectilinear grid
+# would inherit the untyped constant-step range above, which is wrong for it
+# and wrong silently.
+xrange(grd::AbstractRectilinearGrid) = xrange(grd, cellanchor(grd))
+yrange(grd::AbstractRectilinearGrid) = yrange(grd, cellanchor(grd))
+xmin(grd::AbstractRectilinearGrid) = first(xrange(grd))
+ymin(grd::AbstractRectilinearGrid) = first(yrange(grd))
+xmax(grd::AbstractRectilinearGrid) = last(xrange(grd))
+ymax(grd::AbstractRectilinearGrid) = last(yrange(grd))
+
+function xcellsize(grd::AbstractRectilinearGrid)
+    return error("cells of a $(typeof(grd)) vary in width — use xedges()")
+end
+function ycellsize(grd::AbstractRectilinearGrid)
+    return error("cells of a $(typeof(grd)) vary in height — use yedges()")
+end
+
+function _xwidths(grd::AbstractRectilinearGrid)
+    return _widths(xedges(grd))[indices(grd, 1,
+                                        XThenY())]
+end
+function _ywidths(grd::AbstractRectilinearGrid)
+    return _widths(yedges(grd))[indices(grd, 2,
+                                        XThenY())]
+end
+
+# Each cell's extent along one axis, from that axis's edges.
+_widths(edges) = edges[2:end] .- edges[1:(end - 1)]

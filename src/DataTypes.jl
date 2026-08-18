@@ -48,12 +48,73 @@ Subtype of AbstractLocationData where locations are a series of points in space.
 abstract type AbstractPoints <: AbstractLocationData end
 
 """
-    AbstractGrid <: AbstractLocationData
+    AbstractAreas <: AbstractLocationData
 
-Subtype of AbstractLocationData where locations are a grid of regularly
+Subtype of AbstractLocationData where locations cover an area rather than being
+dimensionless points. A grid cell is an area and so is a polygon, and this is
+what they have in common — no more than that, so nothing else is promised here.
+
+"""
+abstract type AbstractAreas <: AbstractLocationData end
+
+"""
+    AbstractGridded <: AbstractAreas
+
+Subtype of AbstractAreas where locations are gridded: addressed by row and
+column, whatever their spacing. This is the level that carries the index
+contract — xcells, ycells, cells, indices, xedges, yedges and cellanchor — and
+so the level for anything generic over every kind of grid.
+
+"""
+abstract type AbstractGridded <: AbstractAreas end
+
+"""
+    AbstractGrid <: AbstractGridded
+
+Subtype of AbstractGridded where locations are a grid of regularly
 spaced, identically shaped, locations.
 """
-abstract type AbstractGrid <: AbstractLocationData end
+abstract type AbstractGrid <: AbstractGridded end
+
+"""
+    AbstractRectilinearGrid <: AbstractGridded
+
+Subtype of AbstractGridded where locations are a rectilinear grid: rows and
+columns as a regular grid has, but of varying width and height. The type
+supplies xedges() and yedges(), and EcoBase derives the rest from them —
+including xrange() and yrange(), which must not fall back to the constant-step
+range a regular grid uses.
+
+"""
+abstract type AbstractRectilinearGrid <: AbstractGridded end
+
+"""
+    AbstractCellAnchor
+
+Supertype for what a gridded location's reported coordinates refer to within
+each cell. EcoBase does not require either, so a grid declares which it uses
+rather than being assumed to use one (see cellanchor). This governs every
+coordinate reported for a grid — xrange, coordinates and the edges derived from
+them — not merely one of them.
+
+"""
+abstract type AbstractCellAnchor end
+
+"""
+    CellCentre <: AbstractCellAnchor
+
+Subtype of AbstractCellAnchor where a cell's coordinate is its centre. This is
+what any AbstractGridded reports unless it says otherwise.
+"""
+struct CellCentre <: AbstractCellAnchor end
+
+"""
+    CellCorner <: AbstractCellAnchor
+
+Subtype of AbstractCellAnchor where a cell's coordinate is its lower corner —
+the smallest x and y it covers.
+"""
+struct CellCorner <: AbstractCellAnchor end
 
 """
     AbstractCoordinateOrder

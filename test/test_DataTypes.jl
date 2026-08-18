@@ -45,6 +45,14 @@ end
 # ToyGridUntyped below pins the behaviour.
 EcoBase.indices(grd::ToyGrid, idx::Integer) = EcoBase.indices(grd)[:, idx]
 
+# Real coordinates for each cell, looked up from the ranges by index - the way
+# SpatialEcology derives them, so that the anchor and order forms have
+# something to work on.
+function EcoBase.coordinates(grd::ToyGrid)
+    ind = EcoBase.indices(grd)
+    return [xrange(grd)[ind[:, 1]] yrange(grd)[ind[:, 2]]]
+end
+
 # The points equivalent, holding the n × 2 coordinate matrix the scatter recipe
 # reads columnwise.
 struct ToyPoints <: EcoBase.AbstractPoints
@@ -72,6 +80,9 @@ EcoBase.indices(gyx::ToyGridYX) = EcoBase.indices(gyx.grd)[:, [2, 1]]
 EcoBase.indices(gyx::ToyGridYX, idx::Integer) = EcoBase.indices(gyx)[:, idx]
 EcoBase.coordinateorder(::ToyGridYX) = EcoBase.YThenX()
 
+# Its coordinates come back y first too, consistently with what it declares.
+EcoBase.coordinates(gyx::ToyGridYX) = EcoBase.coordinates(gyx.grd)[:, [2, 1]]
+
 # A grid that leaves its column selector untyped, as SpatialEcology's SEGrid
 # still does. It exists to pin the one known limitation of asking for an order:
 # see the test below.
@@ -84,6 +95,44 @@ EcoBase.ycells(u::ToyGridUntyped) = ycells(u.grd)
 EcoBase.indices(u::ToyGridUntyped) = EcoBase.indices(u.grd)
 EcoBase.indices(u::ToyGridUntyped, idx) = EcoBase.indices(u)[:, idx]
 
+# A grid whose cells vary in width and height. It supplies only its edges, and
+# EcoBase derives xrange, yrange, xmin, xmax and the rest from them - which is
+# the whole point of the type: a constant cell size cannot describe it.
+struct ToyRectGrid <: EcoBase.AbstractRectilinearGrid
+    xe::Vector{Float64}
+    ye::Vector{Float64}
+end
+
+EcoBase.xedges(r::ToyRectGrid) = r.xe
+EcoBase.yedges(r::ToyRectGrid) = r.ye
+EcoBase.xcells(r::ToyRectGrid) = length(r.xe) - 1
+EcoBase.ycells(r::ToyRectGrid) = length(r.ye) - 1
+
+function EcoBase.indices(r::ToyRectGrid)
+    nx, ny = xcells(r), ycells(r)
+    return [repeat(1:nx, outer = ny) repeat(1:ny, inner = nx)]
+end
+EcoBase.indices(r::ToyRectGrid, idx::Integer) = EcoBase.indices(r)[:, idx]
+
+function EcoBase.coordinates(r::ToyRectGrid)
+    ind = EcoBase.indices(r)
+    return [xrange(r)[ind[:, 1]] yrange(r)[ind[:, 2]]]
+end
+
+# A regular grid that labels its cells by their lower corner rather than their
+# centre, as EcoSISTEM's grids do.
+struct ToyCornerGrid <: EcoBase.AbstractGrid
+    grd::ToyGrid
+end
+
+EcoBase.xmin(c::ToyCornerGrid) = xmin(c.grd)
+EcoBase.ymin(c::ToyCornerGrid) = ymin(c.grd)
+EcoBase.xcellsize(c::ToyCornerGrid) = xcellsize(c.grd)
+EcoBase.ycellsize(c::ToyCornerGrid) = ycellsize(c.grd)
+EcoBase.xcells(c::ToyCornerGrid) = xcells(c.grd)
+EcoBase.ycells(c::ToyCornerGrid) = ycells(c.grd)
+EcoBase.cellanchor(::ToyCornerGrid) = EcoBase.CellCorner()
+
 @testset "Location data hierarchy" begin
     # The relations downstream packages rely on when they subtype EcoBase.
     @test EcoBase.AbstractPoints <: EcoBase.AbstractLocationData
@@ -95,6 +144,20 @@ EcoBase.indices(u::ToyGridUntyped, idx) = EcoBase.indices(u)[:, idx]
     # place with no spatial component at all - the branch Microbiome pins.
     @test EcoBase.AbstractPlaces{Nothing} <: EcoBase.AbstractPlaces
     @test EcoBase.AbstractPlaces{ToyGrid} <: EcoBase.AbstractPlaces
+
+    # The inserted levels. AbstractGrid keeps every relation it had, now by
+    # transitivity through two hops rather than directly - which is what makes
+    # the insertion additive in effect for everything downstream.
+    @test EcoBase.AbstractAreas <: EcoBase.AbstractLocationData
+    @test EcoBase.AbstractGridded <: EcoBase.AbstractAreas
+    @test EcoBase.AbstractGrid <: EcoBase.AbstractGridded
+    @test EcoBase.AbstractRectilinearGrid <: EcoBase.AbstractGridded
+    @test EcoBase.AbstractGrid <: EcoBase.AbstractAreas
+
+    # Both kinds of grid are gridded; points are areas of neither kind.
+    @test ToyRectGrid <: EcoBase.AbstractGridded
+    @test !(EcoBase.AbstractPoints <: EcoBase.AbstractAreas)
+    @test !(EcoBase.AbstractRectilinearGrid <: EcoBase.AbstractGrid)
 end
 
 @testset "Grid interface derived from the six primitives" begin
@@ -179,9 +242,16 @@ end
     untyped = ToyGridUntyped(grd)
     @test_throws MethodError indices(untyped, xy)
 
-    # The three-argument form is unaffected, which is why EcoBase's own
-    # plotting does not depend on downstream signatures being tightened.
+    # The three-argument forms are unaffected, which is why EcoBase's own
+    # plotting does not depend on downstream signatures being tightened - and
+    # why there is a way to ask even such a grid for its whole index matrix in
+    # a chosen order. The anchor there is accepted and ignored: an integer
+    # cell address has no centre or corner, so nothing it could change.
     @test indices(untyped, 1, xy) == indices(grd, 1, xy)
+    @test indices(untyped, xy, EcoBase.CellCentre()) == indices(grd, xy)
+    @test indices(untyped, xy, EcoBase.CellCorner()) ==
+          indices(untyped, xy, EcoBase.CellCentre())
+    @test indices(untyped, yx, EcoBase.CellCentre()) == indices(grd, yx)
     @test EcoBase.convert_to_image(collect(1.0:20.0), untyped) ==
           EcoBase.convert_to_image(collect(1.0:20.0), grd)
 
@@ -199,6 +269,103 @@ end
     @test EcoBase.convert_to_image(var, gyx) ==
           EcoBase.convert_to_image(var, grd)
     @test size(EcoBase.convert_to_image(var, gyx)) == (4, 5)
+end
+
+@testset "cellanchor and edges on a regular grid" begin
+    grd = ToyGrid(21.5, -28.5, 1.0, 2.0, 5, 4)
+    crn = ToyCornerGrid(grd)
+
+    # Declaring nothing means cells are labelled by their centres.
+    @test cellanchor(grd) === EcoBase.CellCentre()
+    @test cellanchor(crn) === EcoBase.CellCorner()
+
+    # Edges are n + 1, one more than the cells - the cardinality that keeps
+    # them a different thing from xrange, which stays one per cell.
+    @test length(xedges(grd)) == xcells(grd) + 1
+    @test length(yedges(grd)) == ycells(grd) + 1
+    @test length(xrange(grd)) == xcells(grd)
+
+    # A centre-labelled grid's first edge is half a cell below its first
+    # label; a corner-labelled one's first edge IS its first label.
+    @test first(xedges(grd)) == 21.0
+    @test first(xedges(crn)) == 21.5
+    @test xedges(crn) == xedges(grd) .+ 0.5
+    @test last(xedges(grd)) == 26.0
+
+    # Asking for an anchor gives the labels at that anchor, whichever the grid
+    # itself uses - and the two grids then agree, being the same geometry
+    # described from different corners.
+    @test xrange(grd, EcoBase.CellCentre()) == xrange(grd)
+    @test xrange(grd, EcoBase.CellCorner()) == xrange(grd) .- 0.5
+    @test xrange(crn, EcoBase.CellCorner()) == xrange(crn)
+    @test xrange(crn, EcoBase.CellCentre()) == xrange(crn) .+ 0.5
+    @test yrange(grd, EcoBase.CellCorner()) == yrange(grd) .- 1.0
+
+    # xrange(grd, CellCorner()) is xedges without its last value - the one
+    # value that cannot be recovered from the cell labels alone.
+    @test xrange(grd, EcoBase.CellCorner()) == xedges(grd)[1:(end - 1)]
+end
+
+@testset "Order and anchor compose on coordinates" begin
+    grd = ToyGrid(21.5, -28.5, 1.0, 2.0, 5, 4)
+    gyx = ToyGridYX(grd)
+    xy, yx = EcoBase.XThenY(), EcoBase.YThenX()
+    centre, corner = EcoBase.CellCentre(), EcoBase.CellCorner()
+
+    # The anchor alone, in the grid's own order. Each coordinate moves by half
+    # its cell, x and y independently.
+    @test coordinates(grd, centre) == coordinates(grd)
+    @test coordinates(grd, corner)[:, 1] == coordinates(grd)[:, 1] .- 0.5
+    @test coordinates(grd, corner)[:, 2] == coordinates(grd)[:, 2] .- 1.0
+
+    # The two together, in either order of columns.
+    @test coordinates(grd, xy, corner) == coordinates(grd, corner)
+    @test coordinates(grd, yx, corner) == coordinates(grd, corner)[:, [2, 1]]
+    @test coordinates(grd, yx, centre) == coordinates(grd)[:, [2, 1]]
+
+    # ⭐ The assertion the whole design exists for: two grids describing the
+    # same geometry, disagreeing on BOTH native order and nothing else, give
+    # identical answers once asked for a definite order and anchor.
+    @test coordinates(gyx, xy, centre) == coordinates(grd, xy, centre)
+    @test coordinates(gyx, xy, corner) == coordinates(grd, xy, corner)
+    @test coordinates(gyx, yx, corner) == coordinates(grd, yx, corner)
+
+    # ... even though natively they are transposes of one another.
+    @test coordinates(gyx) == coordinates(grd)[:, [2, 1]]
+end
+
+@testset "Rectilinear grids derive everything from their edges" begin
+    # Deliberately uneven, and non-square: 4 cells across, 3 up.
+    rect = ToyRectGrid([0.0, 1.0, 3.0, 6.0, 10.0], [0.0, 2.0, 5.0, 9.0])
+
+    @test cells(rect) == (4, 3)
+    @test length(xedges(rect)) == xcells(rect) + 1
+
+    # 🔴 The accident this type exists to avoid: xrange must NOT be the
+    # constant-step range a regular grid inherits. Cell centres here are the
+    # midpoints of successive edges, and the steps between them differ.
+    @test xrange(rect) == [0.5, 2.0, 4.5, 8.0]
+    @test yrange(rect) == [1.0, 3.5, 7.0]
+    @test !(xrange(rect) isa AbstractRange)
+    @test length(unique(diff(xrange(rect)))) > 1
+
+    # Corners are the edges without the last, centres are the midpoints.
+    @test xrange(rect, EcoBase.CellCorner()) == [0.0, 1.0, 3.0, 6.0]
+    @test xrange(rect, EcoBase.CellCentre()) == xrange(rect)
+
+    # Extent comes from the labels, so it follows the anchor too.
+    @test xmin(rect) == 0.5
+    @test xmax(rect) == 8.0
+
+    # A single cell size is meaningless here, and says so rather than lying.
+    @test_throws ErrorException xcellsize(rect)
+    @test_throws ErrorException ycellsize(rect)
+
+    # Coordinates re-anchored per cell, each shifted by its OWN half width -
+    # which is what a constant cell size could not do.
+    corners = coordinates(rect, EcoBase.CellCorner())
+    @test corners[:, 1] == xrange(rect, EcoBase.CellCorner())[indices(rect, 1)]
+    @test coordinates(rect, EcoBase.CellCentre()) == coordinates(rect)
 end
 
 @testset "Points interface" begin

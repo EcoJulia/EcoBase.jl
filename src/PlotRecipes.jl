@@ -3,13 +3,7 @@
 function convert_to_image(var::AbstractVector, grd::AbstractGrid)
     x = Matrix{Float64}(undef, reverse(cells(grd))...)
     fill!(x, NaN)
-    # since matrices are drawn from upper left corner.
-    #
-    # This reaches the private reordering rather than indices(grd, XThenY())
-    # because a downstream grid whose own indices(grd, idx) leaves idx untyped
-    # makes that two-argument call ambiguous — and EcoBase's own plotting must
-    # not depend on downstream signatures being tightened first.
-    ind = _incolumnorder(indices(grd), coordinateorder(grd), XThenY())
+    ind = indices(grd, XThenY(), CellCentre())
     xind, yind = view(ind, :, 1), view(ind, :, 2)
     [x[yind[i], xind[i]] = val for (i, val) in enumerate(var)]
     return x
@@ -19,12 +13,10 @@ RecipesBase.@recipe function f(var::AbstractVector, grd::AbstractGrid)
     seriestype := :heatmap
     aspect_ratio --> :equal
     grid --> false
-    return xrange(grd), yrange(grd), convert_to_image(var, grd)
+    # A heatmap given one coordinate per cell reads them as cell CENTRES
+    return xrange(grd, CellCentre()), yrange(grd, CellCentre()),
+           convert_to_image(var, grd)
 end
-
-# RecipesBase.@recipe function f(sit::SiteFields) # not sure what SiteFields are
-#     ones(nsites(sit)), sit
-# end
 
 RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPoints)
     seriestype := :scatter
