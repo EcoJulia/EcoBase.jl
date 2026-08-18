@@ -161,6 +161,33 @@ end
     @test asindices(2, names) == 2
 end
 
+@testset "Reordering coordinate columns" begin
+    # The reordering underneath coordinates(loc, order) and indices(grd,
+    # order), tested directly on a matrix because that is all there is to it
+    # without a location to look a native order up from; the public accessors
+    # are exercised in test_DataTypes.jl, which has grids and points.
+    cols = [1 2; 3 4; 5 6]
+
+    # Asking for the order it is already in leaves it exactly alone ...
+    @test EcoBase._incolumnorder(cols, EcoBase.XThenY(), EcoBase.XThenY()) ===
+          cols
+    @test EcoBase._incolumnorder(cols, EcoBase.YThenX(), EcoBase.YThenX()) ===
+          cols
+
+    # ... and asking for the other one swaps the two columns.
+    @test EcoBase._incolumnorder(cols, EcoBase.XThenY(), EcoBase.YThenX()) ==
+          [2 1; 4 3; 6 5]
+    @test EcoBase._incolumnorder(cols, EcoBase.YThenX(), EcoBase.XThenY()) ==
+          [2 1; 4 3; 6 5]
+
+    # Swapping twice is the identity, whichever way round it started.
+    for (from, to) in ((EcoBase.XThenY(), EcoBase.YThenX()),
+                       (EcoBase.YThenX(), EcoBase.XThenY()))
+        @test EcoBase._incolumnorder(EcoBase._incolumnorder(cols, from, to),
+                                     to, from) == cols
+    end
+end
+
 @testset "Printing" begin
     asm = toyassemblage()
     printed = sprint(show, asm)

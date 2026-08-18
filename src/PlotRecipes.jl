@@ -3,7 +3,14 @@
 function convert_to_image(var::AbstractVector, grd::AbstractGrid)
     x = Matrix{Float64}(undef, reverse(cells(grd))...)
     fill!(x, NaN)
-    xind, yind = indices(grd, 1), indices(grd, 2) #since matrices are drawn from upper left corner
+    # since matrices are drawn from upper left corner.
+    #
+    # This reaches the private reordering rather than indices(grd, XThenY())
+    # because a downstream grid whose own indices(grd, idx) leaves idx untyped
+    # makes that two-argument call ambiguous — and EcoBase's own plotting must
+    # not depend on downstream signatures being tightened first.
+    ind = _incolumnorder(indices(grd), coordinateorder(grd), XThenY())
+    xind, yind = view(ind, :, 1), view(ind, :, 2)
     [x[yind[i], xind[i]] = val for (i, val) in enumerate(var)]
     return x
 end
@@ -26,7 +33,7 @@ RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPoints)
     marker_z := var
     legend --> false
     colorbar --> true
-    cd = coordinates(pnt)
+    cd = coordinates(pnt, XThenY())
     return cd[:, 1], cd[:, 2]
 end
 

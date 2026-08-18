@@ -56,6 +56,33 @@ spaced, identically shaped, locations.
 abstract type AbstractGrid <: AbstractLocationData end
 
 """
+    AbstractCoordinateOrder
+
+Supertype for the order in which a subtype of AbstractLocationData reports its
+two coordinate columns from indices() and coordinates(). EcoBase does not
+require either order, so a location data type declares which one it uses rather
+than being assumed to use one (see coordinateorder).
+
+"""
+abstract type AbstractCoordinateOrder end
+
+"""
+    XThenY <: AbstractCoordinateOrder
+
+Subtype of AbstractCoordinateOrder where the first column is x and the second is
+y. This is what any AbstractLocationData reports unless it says otherwise.
+"""
+struct XThenY <: AbstractCoordinateOrder end
+
+"""
+    YThenX <: AbstractCoordinateOrder
+
+Subtype of AbstractCoordinateOrder where the first column is y and the second is
+x.
+"""
+struct YThenX <: AbstractCoordinateOrder end
+
+"""
     AbstractAssemblage{D <: Real (e.g. Int, Float64, Bool),
                        T <: AbstractThings,
                        P <: AbstractPlaces}

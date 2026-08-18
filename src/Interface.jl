@@ -143,6 +143,68 @@ function coordinates(plc::AbstractPlaces)
     return error("function not defined for $(typeof(plc))")
 end
 
+# Methods for AbstractLocationData
+"""
+    coordinateorder(loc)
+
+Return the order in which `loc` reports its two coordinate columns from
+indices() and coordinates(), as an AbstractCoordinateOrder.
+
+Location data returns coordinates as a two-column matrix, and EcoBase does not
+require x to come first: a type declares its own order by adding a method here,
+and anything reading those columns asks rather than assumes. Defaults to
+XThenY(), so a type that says nothing is read x first.
+
+"""
+coordinateorder(::AbstractLocationData) = XThenY()
+
+"""
+    coordinates(loc, order)
+
+Return the coordinates of `loc` with its two columns in the requested
+AbstractCoordinateOrder, whatever order `loc` reports them in natively.
+
+Location data gives its coordinates in whichever order it declares through
+coordinateorder(), which a caller generally neither knows nor cares about.
+Asking for the order wanted leaves the reordering to EcoBase, the only party
+that knows the native one, rather than making the caller take the result apart
+to find out.
+
+"""
+function coordinates(loc::AbstractLocationData, want::AbstractCoordinateOrder)
+    return _incolumnorder(coordinates(loc), coordinateorder(loc), want)
+end
+
+"""
+    indices(grd, order)
+    indices(grd, i, order)
+
+Return the cell indices of `grd` with its two columns in the requested
+AbstractCoordinateOrder, or column `i` of them.
+
+The indices() counterpart of coordinates(loc, order). ⚠️ Note that the second
+argument means different things by type: an AbstractCoordinateOrder asks for
+the whole matrix reordered, while an integer asks for that one column in the
+grid's own native order.
+
+"""
+function indices(grd::AbstractGrid, want::AbstractCoordinateOrder)
+    return _incolumnorder(indices(grd), coordinateorder(grd), want)
+end
+function indices(grd::AbstractGrid, i, want::AbstractCoordinateOrder)
+    return _incolumnorder(indices(grd), coordinateorder(grd), want)[:, i]
+end
+
+# Put the two columns of a location data matrix into the wanted order. Two
+# methods rather than a branch, so the choice is settled when the code is
+# compiled rather than retaken per call; and column selection rather than
+# arithmetic, so that coordinates carrying units pass through untouched.
+_incolumnorder(cols, ::O, ::O) where {O <: AbstractCoordinateOrder} = cols
+function _incolumnorder(cols, ::AbstractCoordinateOrder,
+                        ::AbstractCoordinateOrder)
+    return cols[:, [2, 1]]
+end
+
 # Methods for AbstractGrid
 xmin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 ymin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")

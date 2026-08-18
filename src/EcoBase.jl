@@ -18,5 +18,6 @@ export placeoccurrences, thingoccurrences, cooccurring, places, things
 export asindices, indices, coordinates, xcells, ycells, cells, xmin, xmax, ymin,
        ymax
 export xrange, yrange, xcellsize, ycellsize, cellsize, getcoords
+export coordinateorder
 
 end # module
