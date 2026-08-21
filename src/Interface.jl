@@ -1,5 +1,12 @@
 # SPDX-License-Identifier: MIT
 
+"""
+    asindices(x)
+    asindices(x, names)
+
+Convert a selector — a position, name, Symbol or boolean mask — into the
+integer indices it picks out, looking names up in `names` where given.
+"""
 asindices(x::Integer) = x
 asindices(x::AbstractArray{T}) where {T <: Union{Missing, Integer}} = x
 function asindices(x::AbstractArray{Union{Missing, Bool}})
@@ -25,42 +32,127 @@ function asindices(x::T,
 end
 
 # Functions - most have to be implemented with the concrete type
+"""
+    occurrences(asm)
+
+Return the assemblage's community matrix: what was recorded for each thing
+(rows) in each place (columns), as counts, abundances or presences.
+"""
 occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defined for $(typeof(asm))")
+
+"""
+    places(asm)
+
+Return the places the assemblage records — the sites, samples, subcommunities
+or grid cells its things were observed in.
+"""
 places(asm::AbstractAssemblage)::AbstractPlaces = error("function not defined for $(typeof(asm))")
+
+"""
+    things(asm)
+
+Return the things the assemblage records — the species, taxa, sequences or
+phylogenetic branches observed in its places.
+"""
 things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for $(typeof(asm))")
 
 # for custom printing
+"""
+    thingkind(asm)
+
+Return what this assemblage calls its things — "species", "feature", "branch" —
+so that printing it reads in the language of the field it came from.
+"""
 thingkind(asm::AbstractAssemblage) = "thing"
+
+"""
+    placekind(asm)
+
+Return what this assemblage calls its places — "site", "sample",
+"subcommunity" — so that printing it reads in the language of the field.
+"""
 placekind(asm::AbstractAssemblage) = "place"
+
+"""
+    thingkindplural(asm)
+
+Return the plural of thingkind(), which defaults to adding an s and so needs a
+method of its own for anything that does not pluralise that way.
+"""
 thingkindplural(asm::AbstractAssemblage) = "$(thingkind(asm))s"
+
+"""
+    placekindplural(asm)
+
+Return the plural of placekind(), which defaults to adding an s and so needs a
+method of its own for anything that does not pluralise that way.
+"""
 placekindplural(asm::AbstractAssemblage) = "$(placekind(asm))s"
 
+"""
+    nplaces(plc)
+
+Return how many places there are.
+"""
 nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof(plc))")
 nplaces(asm::AbstractAssemblage) = nplaces(places(asm))
 nplaces(asm::AbstractAssemblage, args...) = nplaces(places(asm), args...)
 
+"""
+    placenames(plc)
+
+Return the name of each place, in the order they appear as columns of
+occurrences().
+"""
 placenames(plc::AbstractPlaces)::AbstractVector{<:String} = error("function not defined for $(typeof(plc))")
 placenames(asm::AbstractAssemblage) = placenames(places(asm))
 function placenames(asm::AbstractAssemblage, args...)
     return placenames(places(asm), args...)
 end
 
+"""
+    nthings(thg)
 
+Return how many things there are.
+"""
 nthings(thg::AbstractThings)::Integer = error("function not defined for $(typeof(thg))")
 nthings(asm::AbstractAssemblage) = nthings(things(asm))
+nthings(asm::AbstractAssemblage, args...) = nthings(things(asm), args...)
+
+"""
+    thingnames(thg)
+
+Return the name of each thing, in the order they appear as rows of
+occurrences().
+"""
 thingnames(thg::AbstractThings)::AbstractVector{<:String} = error("function not defined for $(typeof(thg))")
 thingnames(asm::AbstractAssemblage) = thingnames(things(asm))
 function thingnames(asm::AbstractAssemblage, args...)
     return thingnames(things(asm), args...)
 end
 
+"""
+    occurring(asm)
+    occurring(asm, place)
 
+Return the things found anywhere at all, or those present in one place — the
+species list of the whole assemblage, or of that one site.
+"""
 occurring(asm::AbstractAssemblage) = occurring(occurrences(asm))
 function occurring(asm::AbstractAssemblage, idx)
     return occurring(occurrences(asm), asindices(idx, placenames(asm)))
 end
 occurring(a::AbstractMatrix) = nzrows(a)
+occurring(a::AbstractMatrix, idx) = findall(!iszero, a[:, idx])
+occurring(a::AbstractMatrix, idx::AbstractVector) = nzrows(a[:, idx])
 
+"""
+    occupied(asm)
+    occupied(asm, thing)
+
+Return the places holding anything at all, or those where one thing is found —
+that species' distribution across the assemblage.
+"""
 occupied(asm::AbstractAssemblage) = occupied(occurrences(asm))
 function occupied(asm::AbstractAssemblage, idx)
     return occupied(occurrences(asm), asindices(idx, thingnames(asm)))
@@ -69,30 +161,80 @@ occupied(a::AbstractMatrix) = nzcols(a)
 occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
 occupied(a::AbstractMatrix, idx::AbstractVector) = nzcols(a[idx, :])
 
+"""
+    noccurring(asm)
+    noccurring(asm, place)
+
+Return how many things are found anywhere at all, or how many in one place.
+"""
 noccurring(x) = length(occurring(x))
 noccurring(x, idx) = length(occurring(x, idx))
+
+"""
+    noccupied(asm)
+    noccupied(asm, thing)
+
+Return how many places hold anything at all, or how many one thing occupies —
+its range size.
+"""
+noccupied(x) = length(occupied(x))
 noccupied(x, idx) = length(occupied(x, idx))
 
+"""
+    thingoccurrences(asm, thing)
+
+Return one thing's record across every place — a species' abundances over all
+of the sites.
+"""
 function thingoccurrences(asm::AbstractAssemblage, idx)
     return thingoccurrences(occurrences(asm), asindices(idx, thingnames(asm)))
 end
 thingoccurrences(mat::AbstractMatrix, idx) = view(mat, idx, :)
+
+"""
+    placeoccurrences(asm, place)
+
+Return every thing's record in one place — the community found at that site.
+"""
 function placeoccurrences(asm::AbstractAssemblage, idx)
     return placeoccurrences(occurrences(asm), asindices(idx, placenames(asm)))
 end
 placeoccurrences(mat::AbstractMatrix, idx) = view(mat, :, idx) # make certain that the view implementation also takes thing or place names
 
+"""
+    richness(asm)
+
+Return the number of distinct things in each place: species richness, site by
+site.
+"""
 richness(asm::AbstractAssemblage) = richness(occurrences(asm))
 richness(a::AbstractMatrix{Bool}) = collect(vec(colsum(a)))
 richness(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims = 1)))
 
+"""
+    occupancy(asm)
+
+Return the number of places each thing is found in — its occupancy, or range
+size.
+"""
 occupancy(asm::AbstractAssemblage) = occupancy(occurrences(asm))
 occupancy(a::AbstractMatrix{Bool}) = collect(vec(rowsum(a)))
 occupancy(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims = 2)))
 
+"""
+    nrecords(asm)
+
+Return the total number of thing-in-place records, being the non-empty entries
+of the community matrix.
+"""
 nrecords(asm::AbstractAssemblage) = nrecords(occurrences(asm))
 nrecords(a::AbstractMatrix) = nnz(a)
 
+"""
+    cooccurring(asm, things...)
+
+Return which places hold every one of the given things at once.
+"""
 cooccurring(asm, inds...) = cooccurring(asm, [inds...])
 function cooccurring(asm, inds::AbstractVector)
     sub = view(asm, species = inds)
@@ -103,10 +245,22 @@ end
 # accessing cache
 
 # Methods for AbstractPlaces
+"""
+    getcoords(plc)
+
+Return the location data saying where the places are, or the places themselves
+where they carry no geography at all.
+"""
 getcoords(plc::AbstractPlaces{Nothing}) = plc # Pure places generate their own fake location data
 function getcoords(plc::AbstractPlaces{<:AbstractLocationData})
     return error("function not defined for $(typeof(plc))")
 end
+
+"""
+    coordinates(plc)
+
+Return the coordinates of the places, as their location data reports them.
+"""
 function coordinates(plc::AbstractPlaces)
     return error("function not defined for $(typeof(plc))")
 end
@@ -116,46 +270,25 @@ end
     coordinateorder(loc)
 
 Return the order in which `loc` reports its two coordinate columns from
-indices() and coordinates(), as an AbstractCoordinateOrder.
-
-Location data returns coordinates as a two-column matrix, and EcoBase does not
-require x to come first: a type declares its own order by adding a method here,
-and anything reading those columns asks rather than assumes. Defaults to
-XThenY(), so a type that says nothing is read x first.
-
+indices() and coordinates(), defaulting to XThenY() where a type says nothing.
 """
 coordinateorder(::AbstractLocationData) = XThenY()
+
+"""
+    coordinates(loc)
+
+Return two columns of coordinates, one row per place, in whichever order
+coordinateorder() declares — and, for a grid, at the anchor cellanchor() does.
+"""
+function coordinates(loc::AbstractLocationData)
+    return error("function not defined for $(typeof(loc))")
+end
 
 """
     coordinates(loc, order)
 
 Return the coordinates of `loc` with its two columns in the requested
 AbstractCoordinateOrder, whatever order `loc` reports them in natively.
-
-Location data gives its coordinates in whichever order it declares through
-coordinateorder(), which a caller generally neither knows nor cares about.
-Asking for the order wanted leaves the reordering to EcoBase, the only party
-that knows the native one, rather than making the caller take the result apart
-to find out.
-
-"""
-function coordinates(loc::AbstractLocationData, want::AbstractCoordinateOrder)
-    return _incolumnorder(coordinates(loc), coordinateorder(loc), want)
-end
-
-"""
-    indices(grd, order)
-    indices(grd, i, order)
-    indices(grd, order, anchor)
-
-Return the cell indices of `grd` with its two columns in the requested
-AbstractCoordinateOrder, or column `i` of them.
-
-The indices() counterpart of coordinates(loc, order). Note that the second
-argument means different things by type: an AbstractCoordinateOrder asks for
-the whole matrix reordered, while an integer asks for that one column in the
-grid's own native order.
-
 """
 function coordinates(loc::AbstractLocationData,
                      order::AbstractCoordinateOrder)
@@ -174,13 +307,48 @@ end
 
 # Methods for AbstractGridded — the index contract, which every kind of grid
 # answers whatever its spacing
+"""
+    xcells(grd)
+
+Return how many cells the grid spans along x.
+"""
 xcells(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+
+"""
+    ycells(grd)
+
+Return how many cells the grid spans along y.
+"""
 ycells(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+
+"""
+    indices(grd)
+
+Return the two grid indices of the cell each place falls in, one row per
+place, in whichever order coordinateorder() declares.
+"""
 indices(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+
+"""
+    indices(grd, i)
+
+Return column `i` of indices(grd), in the grid's own native order.
+"""
 function indices(grd::AbstractGridded, idx)
     return error("function not defined for $(typeof(grd))")
 end
 
+"""
+    indices(grd, order)
+    indices(grd, order, anchor)
+    indices(grd, i, order)
+    indices(grd, i, order, anchor)
+
+Return the cell indices of `grd` with its two columns in the requested
+AbstractCoordinateOrder, or column `i` of them; indices(grd, i) alone gives
+that column in the grid's own native order, and an anchor, which cell indices
+do not depend on, is accepted only for symmetry with coordinates().
+"""
 function indices(grd::AbstractGridded, order::AbstractCoordinateOrder)
     return _incolumnorder(indices(grd), coordinateorder(grd), order)
 end
@@ -198,52 +366,65 @@ function indices(grd::AbstractGridded, i, order::AbstractCoordinateOrder,
     return _incolumnorder(indices(grd), coordinateorder(grd), order)[:, i]
 end
 
+"""
+    cellsize(grd)
+
+Return a cell's width and height — the grain at which the data was recorded.
+"""
 cellsize(grd) = xcellsize(grd), ycellsize(grd)
+
+"""
+    cells(grd)
+
+Return the grid's shape, as the number of cells along x and along y.
+"""
+cells(grd) = xcells(grd), ycells(grd)
 
 """
     cellanchor(grd)
 
-Return what a cell's reported coordinate refers to within that cell, as an
-AbstractCellAnchor.
-
-A grid labels each cell with a single coordinate, and EcoBase does not require
-that to be the cell's centre: a type declares its own by adding a method here.
-Defaults to CellCentre(), so a grid that says nothing is read as labelling its
-cells by their centres. This governs every coordinate reported for the grid —
-xrange(), coordinates(), and the edges derived from them — not just one.
-
+Return what a cell's reported coordinate refers to within that cell,
+defaulting to CellCentre() where a grid says nothing.
 """
 cellanchor(::AbstractGridded) = CellCentre()
 
 """
     xedges(grd)
+
+Return the cell boundaries of `grd` along x: one more value than there are
+cells, and so never what xrange() returns at any anchor.
+"""
+# xrange() gives one coordinate per cell whatever the anchor, so it and the
+# edges differ by exactly the final edge — and on a rectilinear grid that edge
+# cannot be recovered from the cell coordinates, the last cell's width not being
+# among their differences. A regular grid needs no method here: EcoBase derives
+# its edges from the cell size.
+xedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+"""
     yedges(grd)
 
-Return the cell boundaries of `grd` along x or y: one MORE value than there are
-cells, since n cells have n + 1 edges between and around them.
-
-This is what xrange() cannot be. xrange() gives one coordinate per cell
-whatever the anchor, so the two differ by exactly the final edge — and on a
-rectilinear grid that edge cannot be recovered from the cell coordinates, since
-the last cell's width is not among their differences. A regular grid needs no
-method here: EcoBase derives its edges from the cell size.
-
+Return the cell boundaries of `grd` along y, as xedges() does along x.
 """
-xedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 yedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 
 """
     xrange(grd, anchor)
-    yrange(grd, anchor)
 
-Return one coordinate per cell along x or y, referring to the requested
+Return one coordinate per cell along x, referring to the requested
 AbstractCellAnchor rather than to whichever the grid itself declares.
-
 """
 function xrange(grd::AbstractGridded, anchor::AbstractCellAnchor)
     return _atedges(xedges(grd), anchor)
 end
 
+"""
+    yrange(grd, anchor)
+
+Return one coordinate per cell along y, referring to the requested
+AbstractCellAnchor rather than to whichever the grid itself declares.
+"""
+function yrange(grd::AbstractGridded, anchor::AbstractCellAnchor)
+    return _atedges(yedges(grd), anchor)
 end
 
 # One coordinate per cell, taken from that cell's own pair of edges.
@@ -277,13 +458,66 @@ _atanchor(vals, width, ::CellCentre, ::CellCorner) = vals .- width ./ 2
 _atanchor(vals, width, ::CellCorner, ::CellCentre) = vals .+ width ./ 2
 
 # Methods for AbstractGrid — the regularly spaced case
+"""
+    xmin(grd)
+
+Return the coordinate of the first cell along x, referring to wherever in the
+cell cellanchor() says it does.
+"""
 xmin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+
+"""
+    ymin(grd)
+
+Return the coordinate of the first cell along y, referring to wherever in the
+cell cellanchor() says it does.
+"""
 ymin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+
+"""
+    xcellsize(grd)
+
+Return the width of one cell — the grain, or spatial resolution, at which the
+grid records its places along x.
+"""
 xcellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+
+"""
+    ycellsize(grd)
+
+Return the height of one cell — the grain, or spatial resolution, at which the
+grid records its places along y.
+"""
 ycellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+
+"""
+    xrange(grd)
+
+Return one coordinate per cell along x, running from the first cell to the
+last.
+"""
 xrange(grd) = xmin(grd):xcellsize(grd):xmax(grd) #includes intermediary points
+
+"""
+    yrange(grd)
+
+Return one coordinate per cell along y, running from the first cell to the
+last.
+"""
 yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
+
+"""
+    xmax(grd)
+
+Return the coordinate of the last cell along x.
+"""
 xmax(grd) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
+
+"""
+    ymax(grd)
+
+Return the coordinate of the last cell along y.
+"""
 ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
 
 # Every cell is the same size, so the edges follow from the first label, that
