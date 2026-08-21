@@ -225,10 +225,14 @@ end
     @test indices(grd, yx) == indices(gyx, yx)
     @test indices(grd, xy) != indices(grd, yx)
 
-    # Column i of a requested order, which is what the recipes actually take.
+    # Column i of a requested order, taken after the reordering.
     @test indices(grd, 1, xy) == indices(gyx, 1, xy)
     @test indices(grd, 2, xy) == indices(gyx, 2, xy)
     @test indices(grd, 1, yx) == indices(grd, 2, xy)
+
+    # An anchor may ride along with either, and changes nothing.
+    @test indices(grd, xy, EcoBase.CellCorner()) == indices(grd, xy)
+    @test indices(grd, 1, xy, EcoBase.CellCorner()) == indices(grd, 1, xy)
 
     # Points have coordinates but no indices, and answer the same way.
     @test coordinates(pnt, xy) == coordinates(pnt)
@@ -252,6 +256,8 @@ end
     @test indices(untyped, xy, EcoBase.CellCorner()) ==
           indices(untyped, xy, EcoBase.CellCentre())
     @test indices(untyped, yx, EcoBase.CellCentre()) == indices(grd, yx)
+    @test indices(untyped, 1, xy, EcoBase.CellCentre()) == indices(grd, 1, xy)
+    @test indices(untyped, 2, yx, EcoBase.CellCorner()) == indices(grd, 2, yx)
     @test EcoBase.convert_to_image(collect(1.0:20.0), untyped) ==
           EcoBase.convert_to_image(collect(1.0:20.0), grd)
 
