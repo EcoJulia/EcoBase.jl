@@ -26,7 +26,6 @@ end
 
 # Functions - most have to be implemented with the concrete type
 occurrences(asm::AbstractAssemblage)::AbstractMatrix = error("function not defined for $(typeof(asm))")
-view(asm::AbstractAssemblage) = error("function not defined for $(typeof(asm))")
 places(asm::AbstractAssemblage)::AbstractPlaces = error("function not defined for $(typeof(asm))")
 things(asm::AbstractAssemblage)::AbstractThings = error("function not defined for $(typeof(asm))")
 
@@ -37,20 +36,24 @@ thingkindplural(asm::AbstractAssemblage) = "$(thingkind(asm))s"
 placekindplural(asm::AbstractAssemblage) = "$(placekind(asm))s"
 
 nplaces(plc::AbstractPlaces)::Integer = error("function not defined for $(typeof(plc))")
-nplaces(plc::AbstractAssemblage) = nplaces(places(plc))
+nplaces(asm::AbstractAssemblage) = nplaces(places(asm))
+nplaces(asm::AbstractAssemblage, args...) = nplaces(places(asm), args...)
+
 placenames(plc::AbstractPlaces)::AbstractVector{<:String} = error("function not defined for $(typeof(plc))")
-placenames(plc::AbstractAssemblage) = placenames(places(plc))
+placenames(asm::AbstractAssemblage) = placenames(places(asm))
+function placenames(asm::AbstractAssemblage, args...)
+    return placenames(places(asm), args...)
+end
+
 
 nthings(thg::AbstractThings)::Integer = error("function not defined for $(typeof(thg))")
 nthings(asm::AbstractAssemblage) = nthings(things(asm))
 thingnames(thg::AbstractThings)::AbstractVector{<:String} = error("function not defined for $(typeof(thg))")
 thingnames(asm::AbstractAssemblage) = thingnames(things(asm))
+function thingnames(asm::AbstractAssemblage, args...)
+    return thingnames(things(asm), args...)
+end
 
-nzrows(a::AbstractMatrix) = findall(vec(sum(a, dims = 2) .> 0))
-nzcols(a::AbstractMatrix) = findall(vec(sum(a, dims = 1) .> 0))
-nnz(a::AbstractArray) = sum(a .> 0)
-colsum(x) = sum(x, dims = 1)
-rowsum(x) = sum(x, dims = 2)
 
 occurring(asm::AbstractAssemblage) = occurring(occurrences(asm))
 function occurring(asm::AbstractAssemblage, idx)
@@ -63,14 +66,10 @@ function occupied(asm::AbstractAssemblage, idx)
     return occupied(occurrences(asm), asindices(idx, thingnames(asm)))
 end
 occupied(a::AbstractMatrix) = nzcols(a)
-
 occupied(a::AbstractMatrix, idx) = findall(!iszero, a[idx, :])
-occurring(a::AbstractMatrix, idx) = findall(!iszero, a[:, idx])
 occupied(a::AbstractMatrix, idx::AbstractVector) = nzcols(a[idx, :])
-occurring(a::AbstractMatrix, idx::AbstractVector) = nzrows(a[:, idx])
 
 noccurring(x) = length(occurring(x))
-noccupied(x) = length(occupied(x))
 noccurring(x, idx) = length(occurring(x, idx))
 noccupied(x, idx) = length(occupied(x, idx))
 
@@ -99,37 +98,6 @@ function cooccurring(asm, inds::AbstractVector)
     sub = view(asm, species = inds)
     return richness(sub) .== nthings(sub)
 end
-
-function createsummaryline(vec::AbstractVector{<:AbstractString})
-    linefunc(vec) = mapreduce(x -> x * ", ", *, vec[1:(end - 1)]) * vec[end]
-    length(vec) == 1 && return vec[1]
-    length(vec) < 6 && return linefunc(vec)
-    return linefunc(vec[1:3]) * "..." * linefunc(vec[(end - 1):end])
-end
-
-function show(io::IO, asm::T) where {T <: AbstractAssemblage}
-    tn = createsummaryline(thingnames(asm))
-    pn = createsummaryline(placenames(asm))
-    thing = titlecase(thingkind(asm))
-    things = thingkindplural(asm)
-    place = titlecase(placekind(asm))
-    places = placekindplural(asm)
-    println(io,
-            """$T with $(nthings(asm)) $things in $(nplaces(asm)) $places
-
-            $thing names:
-            $(tn)
-
-            $place names:
-            $(pn)
-            """)
-    return nothing
-end
-
-nplaces(asm::AbstractAssemblage, args...) = nplaces(places(asm), args...)
-placenames(asm::AbstractAssemblage, args...) = placenames(places(asm), args...)
-nthings(asm::AbstractAssemblage, args...) = nthings(things(asm), args...)
-thingnames(asm::AbstractAssemblage, args...) = thingnames(things(asm), args...)
 
 # TODO:
 # accessing cache
@@ -189,17 +157,9 @@ the whole matrix reordered, while an integer asks for that one column in the
 grid's own native order.
 
 """
-function indices(grd::AbstractGridded, want::AbstractCoordinateOrder)
-    return _incolumnorder(indices(grd), coordinateorder(grd), want)
-end
-function indices(grd::AbstractGridded, i, want::AbstractCoordinateOrder)
-    return _incolumnorder(indices(grd), coordinateorder(grd), want)[:, i]
-end
-# Deliberately NOT delegating to the two-argument form above, which would
-# inherit its ambiguity for exactly the grids this method exists to serve.
-function indices(grd::AbstractGridded, want::AbstractCoordinateOrder,
-                 ::AbstractCellAnchor)
-    return _incolumnorder(indices(grd), coordinateorder(grd), want)
+function coordinates(loc::AbstractLocationData,
+                     order::AbstractCoordinateOrder)
+    return _incolumnorder(coordinates(loc), coordinateorder(loc), order)
 end
 
 # Put the two columns of a location data matrix into the wanted order. Two
@@ -220,11 +180,25 @@ indices(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 function indices(grd::AbstractGridded, idx)
     return error("function not defined for $(typeof(grd))")
 end
-function coordinates(grd::AbstractGridded)
-    return error("function not defined for $(typeof(grd))")
+
+function indices(grd::AbstractGridded, order::AbstractCoordinateOrder)
+    return _incolumnorder(indices(grd), coordinateorder(grd), order)
 end
+function indices(grd::AbstractGridded, i, order::AbstractCoordinateOrder)
+    return _incolumnorder(indices(grd), coordinateorder(grd), order)[:, i]
+end
+# Deliberately NOT delegating to the forms above, which would inherit their
+# ambiguity for exactly the grids these methods exist to serve.
+function indices(grd::AbstractGridded, order::AbstractCoordinateOrder,
+                 ::AbstractCellAnchor)
+    return _incolumnorder(indices(grd), coordinateorder(grd), order)
+end
+function indices(grd::AbstractGridded, i, order::AbstractCoordinateOrder,
+                 ::AbstractCellAnchor)
+    return _incolumnorder(indices(grd), coordinateorder(grd), order)[:, i]
+end
+
 cellsize(grd) = xcellsize(grd), ycellsize(grd)
-cells(grd) = xcells(grd), ycells(grd)
 
 """
     cellanchor(grd)
@@ -266,11 +240,10 @@ Return one coordinate per cell along x or y, referring to the requested
 AbstractCellAnchor rather than to whichever the grid itself declares.
 
 """
-function xrange(grd::AbstractGridded, want::AbstractCellAnchor)
-    return _atedges(xedges(grd), want)
+function xrange(grd::AbstractGridded, anchor::AbstractCellAnchor)
+    return _atedges(xedges(grd), anchor)
 end
-function yrange(grd::AbstractGridded, want::AbstractCellAnchor)
-    return _atedges(yedges(grd), want)
+
 end
 
 # One coordinate per cell, taken from that cell's own pair of edges.
@@ -283,17 +256,16 @@ _atedges(edges, ::CellCentre) = (edges[1:(end - 1)] .+ edges[2:end]) ./ 2
 
 Return the coordinates of `grd` referring to the requested AbstractCellAnchor,
 and with its columns in the requested AbstractCoordinateOrder if one is given.
-
 """
-function coordinates(grd::AbstractGridded, want::AbstractCellAnchor)
-    return coordinates(grd, coordinateorder(grd), want)
+function coordinates(grd::AbstractGridded, anchor::AbstractCellAnchor)
+    return coordinates(grd, coordinateorder(grd), anchor)
 end
 function coordinates(grd::AbstractGridded, order::AbstractCoordinateOrder,
-                     want::AbstractCellAnchor)
+                     anchor::AbstractCellAnchor)
     xy = coordinates(grd, XThenY())
     from = cellanchor(grd)
-    xs = _atanchor(xy[:, 1], _xwidths(grd), from, want)
-    ys = _atanchor(xy[:, 2], _ywidths(grd), from, want)
+    xs = _atanchor(xy[:, 1], _xwidths(grd), from, anchor)
+    ys = _atanchor(xy[:, 2], _ywidths(grd), from, anchor)
     return _incolumnorder(hcat(xs, ys), XThenY(), order)
 end
 
@@ -325,7 +297,7 @@ function yedges(grd::AbstractGrid)
                          cellanchor(grd))
 end
 
-function _regularedges(lo, size, n, anchor)
+function _regularedges(lo, size, n, anchor::AbstractCellAnchor)
     return range(_firstedge(lo, size, anchor), step = size, length = n + 1)
 end
 
@@ -358,12 +330,65 @@ function ycellsize(grd::AbstractRectilinearGrid)
 end
 
 function _xwidths(grd::AbstractRectilinearGrid)
-    return _widths(xedges(grd))[indices(grd, 1,
-                                        XThenY())]
+    return _widths(xedges(grd))[indices(grd, 1, XThenY())]
 end
 function _ywidths(grd::AbstractRectilinearGrid)
-    return _widths(yedges(grd))[indices(grd, 2,
-                                        XThenY())]
+    return _widths(yedges(grd))[indices(grd, 2, XThenY())]
+end
+
+# Methods extending Base, both of them on assemblages. The import declares
+# that intent where it happens, and puts show and view in EcoBase's own
+# namespace for the downstream packages that import them from here; the
+# qualified definitions below then say at each site which function is meant.
+import Base: show, view
+
+# An assemblage must supply a view that subsets it by thing, which is what
+# cooccurring() compares a subset's richness against its number of things.
+function Base.view(asm::AbstractAssemblage)
+    return error("function not defined for $(typeof(asm))")
+end
+
+function Base.show(io::IO, asm::T) where {T <: AbstractAssemblage}
+    tn = createsummaryline(thingnames(asm))
+    pn = createsummaryline(placenames(asm))
+    thing = titlecase(thingkind(asm))
+    things = thingkindplural(asm)
+    place = titlecase(placekind(asm))
+    places = placekindplural(asm)
+    println(io,
+            """$T with $(nthings(asm)) $things in $(nplaces(asm)) $places
+
+            $thing names:
+            $(tn)
+
+            $place names:
+            $(pn)
+            """)
+    return nothing
+end
+
+# Helper functions. Every one of these works on plain arrays or strings rather
+# than on any of EcoBase's own types, so they are gathered here rather than
+# among the interface they serve. None is exported.
+
+# Which rows — things — were recorded in at least one place.
+nzrows(a::AbstractMatrix) = findall(vec(sum(a, dims = 2) .> 0))
+# Which columns — places — hold at least one thing.
+nzcols(a::AbstractMatrix) = findall(vec(sum(a, dims = 1) .> 0))
+# How many entries record something present, rather than what they add up to.
+nnz(a::AbstractArray) = sum(a .> 0)
+# One total per place, summing over the things found there.
+colsum(x) = sum(x, dims = 1)
+# One total per thing, summing over the places it was found in.
+rowsum(x) = sum(x, dims = 2)
+
+# Fold a list of names into a single line for printing, eliding the middle of
+# a long one as "a, b, c...y, z".
+function createsummaryline(vec::AbstractVector{<:AbstractString})
+    linefunc(vec) = mapreduce(x -> x * ", ", *, vec[1:(end - 1)]) * vec[end]
+    length(vec) == 1 && return vec[1]
+    length(vec) < 6 && return linefunc(vec)
+    return linefunc(vec[1:3]) * "..." * linefunc(vec[(end - 1):end])
 end
 
 # Each cell's extent along one axis, from that axis's edges.
