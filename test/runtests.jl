@@ -48,7 +48,7 @@ if rsmd == "FALSE"
     Random.seed!(1234)
 
     @testset "EcoBase.jl" begin
-        @test isfile(EcoBase.path("runtests.jl"))
+        @test isfile(pkgdir(EcoBase, "test", "runtests.jl"))
         println()
         @info "Running tests for files:"
         for t in testbase

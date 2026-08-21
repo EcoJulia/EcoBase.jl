@@ -2,11 +2,7 @@
 
 module EcoBase
 
-import Base: show, view
 import RecipesBase
-
-# Path into package
-path(path...; dir::String = "test") = joinpath(@__DIR__, "..", dir, path...)
 
 include("DataTypes.jl")
 include("Interface.jl")
