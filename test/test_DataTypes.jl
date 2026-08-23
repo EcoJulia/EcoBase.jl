@@ -95,30 +95,6 @@ EcoBase.ycells(u::ToyGridUntyped) = ycells(u.grd)
 EcoBase.indices(u::ToyGridUntyped) = EcoBase.indices(u.grd)
 EcoBase.indices(u::ToyGridUntyped, idx) = EcoBase.indices(u)[:, idx]
 
-# A grid whose cells vary in width and height. It supplies only its edges, and
-# EcoBase derives xrange, yrange, xmin, xmax and the rest from them - which is
-# the whole point of the type: a constant cell size cannot describe it.
-struct ToyRectGrid <: EcoBase.AbstractRectilinearGrid
-    xe::Vector{Float64}
-    ye::Vector{Float64}
-end
-
-EcoBase.xedges(r::ToyRectGrid) = r.xe
-EcoBase.yedges(r::ToyRectGrid) = r.ye
-EcoBase.xcells(r::ToyRectGrid) = length(r.xe) - 1
-EcoBase.ycells(r::ToyRectGrid) = length(r.ye) - 1
-
-function EcoBase.indices(r::ToyRectGrid)
-    nx, ny = xcells(r), ycells(r)
-    return [repeat(1:nx, outer = ny) repeat(1:ny, inner = nx)]
-end
-EcoBase.indices(r::ToyRectGrid, idx::Integer) = EcoBase.indices(r)[:, idx]
-
-function EcoBase.coordinates(r::ToyRectGrid)
-    ind = EcoBase.indices(r)
-    return [xrange(r)[ind[:, 1]] yrange(r)[ind[:, 2]]]
-end
-
 # A regular grid that labels its cells by their lower corner rather than their
 # centre, as EcoSISTEM's grids do.
 struct ToyCornerGrid <: EcoBase.AbstractGrid
@@ -151,13 +127,10 @@ EcoBase.cellanchor(::ToyCornerGrid) = EcoBase.CellCorner()
     @test EcoBase.AbstractAreas <: EcoBase.AbstractLocationData
     @test EcoBase.AbstractGridded <: EcoBase.AbstractAreas
     @test EcoBase.AbstractGrid <: EcoBase.AbstractGridded
-    @test EcoBase.AbstractRectilinearGrid <: EcoBase.AbstractGridded
     @test EcoBase.AbstractGrid <: EcoBase.AbstractAreas
 
     # Both kinds of grid are gridded; points are areas of neither kind.
-    @test ToyRectGrid <: EcoBase.AbstractGridded
     @test !(EcoBase.AbstractPoints <: EcoBase.AbstractAreas)
-    @test !(EcoBase.AbstractRectilinearGrid <: EcoBase.AbstractGrid)
 end
 
 @testset "Grid interface derived from the six primitives" begin
@@ -338,40 +311,6 @@ end
 
     # ... even though natively they are transposes of one another.
     @test coordinates(gyx) == coordinates(grd)[:, [2, 1]]
-end
-
-@testset "Rectilinear grids derive everything from their edges" begin
-    # Deliberately uneven, and non-square: 4 cells across, 3 up.
-    rect = ToyRectGrid([0.0, 1.0, 3.0, 6.0, 10.0], [0.0, 2.0, 5.0, 9.0])
-
-    @test cells(rect) == (4, 3)
-    @test length(xedges(rect)) == xcells(rect) + 1
-
-    # 🔴 The accident this type exists to avoid: xrange must NOT be the
-    # constant-step range a regular grid inherits. Cell centres here are the
-    # midpoints of successive edges, and the steps between them differ.
-    @test xrange(rect) == [0.5, 2.0, 4.5, 8.0]
-    @test yrange(rect) == [1.0, 3.5, 7.0]
-    @test !(xrange(rect) isa AbstractRange)
-    @test length(unique(diff(xrange(rect)))) > 1
-
-    # Corners are the edges without the last, centres are the midpoints.
-    @test xrange(rect, EcoBase.CellCorner()) == [0.0, 1.0, 3.0, 6.0]
-    @test xrange(rect, EcoBase.CellCentre()) == xrange(rect)
-
-    # Extent comes from the labels, so it follows the anchor too.
-    @test xmin(rect) == 0.5
-    @test xmax(rect) == 8.0
-
-    # A single cell size is meaningless here, and says so rather than lying.
-    @test_throws ErrorException xcellsize(rect)
-    @test_throws ErrorException ycellsize(rect)
-
-    # Coordinates re-anchored per cell, each shifted by its OWN half width -
-    # which is what a constant cell size could not do.
-    corners = coordinates(rect, EcoBase.CellCorner())
-    @test corners[:, 1] == xrange(rect, EcoBase.CellCorner())[indices(rect, 1)]
-    @test coordinates(rect, EcoBase.CellCentre()) == coordinates(rect)
 end
 
 @testset "Points interface" begin

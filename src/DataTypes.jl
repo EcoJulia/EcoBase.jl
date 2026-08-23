@@ -77,18 +77,6 @@ spaced, identically shaped, locations.
 abstract type AbstractGrid <: AbstractGridded end
 
 """
-    AbstractRectilinearGrid <: AbstractGridded
-
-Subtype of AbstractGridded where locations are a rectilinear grid: rows and
-columns as a regular grid has, but of varying width and height. The type
-supplies xedges() and yedges(), and EcoBase derives the rest from them —
-including xrange() and yrange(), which must not fall back to the constant-step
-range a regular grid uses.
-
-"""
-abstract type AbstractRectilinearGrid <: AbstractGridded end
-
-"""
     AbstractCellAnchor
 
 Supertype for what a gridded location's reported coordinates refer to within

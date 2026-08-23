@@ -543,33 +543,6 @@ _firstedge(lo, size, ::CellCorner) = lo
 _xwidths(grd::AbstractGrid) = xcellsize(grd)
 _ywidths(grd::AbstractGrid) = ycellsize(grd)
 
-# Methods for AbstractRectilinearGrid — cells vary, so everything derives from
-# the edges rather than from a single cell size
-#
-# Note: xrange and yrange MUST be given here. Without them a rectilinear grid
-# would inherit the untyped constant-step range above, which is wrong for it
-# and wrong silently.
-xrange(grd::AbstractRectilinearGrid) = xrange(grd, cellanchor(grd))
-yrange(grd::AbstractRectilinearGrid) = yrange(grd, cellanchor(grd))
-xmin(grd::AbstractRectilinearGrid) = first(xrange(grd))
-ymin(grd::AbstractRectilinearGrid) = first(yrange(grd))
-xmax(grd::AbstractRectilinearGrid) = last(xrange(grd))
-ymax(grd::AbstractRectilinearGrid) = last(yrange(grd))
-
-function xcellsize(grd::AbstractRectilinearGrid)
-    return error("cells of a $(typeof(grd)) vary in width — use xedges()")
-end
-function ycellsize(grd::AbstractRectilinearGrid)
-    return error("cells of a $(typeof(grd)) vary in height — use yedges()")
-end
-
-function _xwidths(grd::AbstractRectilinearGrid)
-    return _widths(xedges(grd))[indices(grd, 1, XThenY())]
-end
-function _ywidths(grd::AbstractRectilinearGrid)
-    return _widths(yedges(grd))[indices(grd, 2, XThenY())]
-end
-
 # Methods extending Base, both of them on assemblages. The import declares
 # that intent where it happens, and puts show and view in EcoBase's own
 # namespace for the downstream packages that import them from here; the
