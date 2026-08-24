@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: MIT
 
+import SparseArrays: nnz
+
 """
     asindices(x)
     asindices(x, names)

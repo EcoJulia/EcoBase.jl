@@ -8,6 +8,7 @@ desc = "Base package with abstract types for ecology"
 
 [deps]
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 Diversity = "0.5"
@@ -19,6 +20,7 @@ Pkg = "1"
 Random = "1"
 RecipesBase = "0.7, 0.8, 0.9, 1"
 ResearchSoftwareMetadata = "0.1.1"
+SparseArrays = "1.6"
 SpatialEcology = "0.9"
 julia = "1"
 
