@@ -1,10 +1,9 @@
 name = "EcoBase"
 uuid = "a58aae7d-b440-5a11-b283-399458f99aac"
 license = "MIT"
-authors = ["Michael Borregaard", "Richard Reeve <richard.reeve@glasgow.ac.uk>", "Kevin Bonham <kevin.bonham@tuftsmedicine.org>"]
-version = "0.1.7"
-keywords = ["macroecology", "ecology", "biology", "geography", "julia", "EcoJulia"]
 desc = "Base package with abstract types for ecology"
+version = "0.2.0"
+authors = ["Michael Borregaard", "Richard Reeve <richard.reeve@glasgow.ac.uk>", "Kevin Bonham <kevin.bonham@tuftsmedicine.org>"]
 
 [deps]
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
@@ -22,25 +21,6 @@ ResearchSoftwareMetadata = "0.1.1"
 SpatialEcology = "0.9"
 julia = "1"
 
-[[author_details]]
-name = "Michael Borregaard"
-orcid = "0000-0002-8146-8435"
-
-    [[author_details.affiliation]]
-    ror = "035b05819"
-[[author_details]]
-name = "Richard Reeve"
-orcid = "0000-0003-2589-8091"
-
-    [[author_details.affiliation]]
-    ror = "00vtgdb53"
-[[author_details]]
-name = "Kevin Bonham"
-orcid = "0000-0003-3200-7533"
-
-    [[author_details.affiliation]]
-    ror = "01srpnj69"
-
 [extras]
 Diversity = "d3d5718d-52de-57ab-b67a-eca7fd6175a4"
 Git = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
@@ -52,6 +32,30 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ResearchSoftwareMetadata = "58378933-4625-47fa-851e-05ee27d397bd"
 SpatialEcology = "348f2d5d-71a3-5ad4-b565-8af070f99681"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[rsmd]
+keywords = ["macroecology", "ecology", "biology", "geography", "julia", "EcoJulia"]
+category = "ecology"
+development_status = "active"
+
+    [[rsmd.author_details]]
+    name = "Michael Borregaard"
+    orcid = "0000-0002-8146-8435"
+
+        [[rsmd.author_details.affiliation]]
+        ror = "035b05819"
+    [[rsmd.author_details]]
+    name = "Richard Reeve"
+    orcid = "0000-0003-2589-8091"
+
+        [[rsmd.author_details.affiliation]]
+        ror = "00vtgdb53"
+    [[rsmd.author_details]]
+    name = "Kevin Bonham"
+    orcid = "0000-0003-3200-7533"
+
+        [[rsmd.author_details.affiliation]]
+        ror = "01srpnj69"
 
 [targets]
 test = ["SpatialEcology", "Diversity", "Microbiome", "Git", "JuliaFormatter", "Logging", "Pkg", "Random", "ResearchSoftwareMetadata", "Test"]
