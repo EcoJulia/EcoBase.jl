@@ -16,4 +16,6 @@ export asindices, indices, coordinates, xcells, ycells, cells, xmin, xmax, ymin,
 export xrange, yrange, xcellsize, ycellsize, cellsize, getcoords
 export coordinateorder, cellanchor, xedges, yedges
 
+@deprecate nnz numnonzero false
+
 end # module

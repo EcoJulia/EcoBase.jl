@@ -10,8 +10,7 @@
     slicing the result to find out
   - Add AbstractAreas and AbstractGridded between AbstractLocationData and
     AbstractGrid, for locations that cover an area and for those addressed by
-    row and column; add AbstractRectilinearGrid beside AbstractGrid for grids
-    whose cells vary in size
+    row and column
   - Add xedges()/yedges() giving the n + 1 cell boundaries, and
     xrange()/yrange()/coordinates() taking the anchor wanted
 - v0.1.7

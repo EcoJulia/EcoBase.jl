@@ -291,15 +291,23 @@ end
     xy, yx = EcoBase.XThenY(), EcoBase.YThenX()
     centre, corner = EcoBase.CellCentre(), EcoBase.CellCorner()
 
+    # The grid's own order, in its own anchor, is the default answer.
+    @test coordinates(grd, xy) == coordinates(grd)
+    @test coordinates(gyx, yx) == coordinates(gyx)
+    @test coordinates(grd, yx)[:, 2] == coordinates(grd)[:, 1]
+
     # The anchor alone, in the grid's own order. Each coordinate moves by half
     # its cell, x and y independently.
-    @test coordinates(grd, centre) == coordinates(grd)
-    @test coordinates(grd, corner)[:, 1] == coordinates(grd)[:, 1] .- 0.5
-    @test coordinates(grd, corner)[:, 2] == coordinates(grd)[:, 2] .- 1.0
+    @test coordinates(grd, xy, centre) == coordinates(grd, xy)
+    @test coordinates(grd, xy, corner)[:, 1] ==
+          coordinates(grd, xy)[:, 1] .- 0.5
+    @test coordinates(grd, xy, corner)[:, 2] ==
+          coordinates(grd, xy)[:, 2] .- 1.0
 
     # The two together, in either order of columns.
-    @test coordinates(grd, xy, corner) == coordinates(grd, corner)
-    @test coordinates(grd, yx, corner) == coordinates(grd, corner)[:, [2, 1]]
+    @test coordinates(grd, xy, centre) == coordinates(grd)
+    @test coordinates(grd, yx, corner) ==
+          coordinates(grd, xy, corner)[:, [2, 1]]
     @test coordinates(grd, yx, centre) == coordinates(grd)[:, [2, 1]]
 
     # ⭐ The assertion the whole design exists for: two grids describing the

@@ -76,9 +76,26 @@ end
     @test length(xrange(gd)) == xcells(gd)
     @test length(yrange(gd)) == ycells(gd)
 
+    # ... and the same six on the ASSEMBLAGE, which is not a grid, nor even
+    # location data. SpatialEcology forwards only the primitives and relies on
+    # EcoBase's untyped derivations for the rest, so these are its public API
+    # by way of EcoBase's method signatures. Testing them on gd alone missed a
+    # release in which four of the six stopped working here.
+    @test cells(asm) == cells(gd)
+    @test cellsize(asm) == cellsize(gd)
+    @test xrange(asm) == xrange(gd)
+    @test yrange(asm) == yrange(gd)
+    @test xmin(asm) == xmin(gd)
+    @test xmax(asm) == xmax(gd)
+
     # SpatialEcology declares no coordinate order, so it is read x first -
     # which is what it already did, so nothing about it changes.
     @test coordinateorder(gd) === EcoBase.XThenY()
+
+    # An assemblage answers for the location data it holds, which is what lets
+    # cells() and cellsize() above consult an order at all.
+    @test coordinateorder(asm) === coordinateorder(gd)
+    @test coordinateorder(places(asm)) === coordinateorder(gd)
     @test coordinates(gd, EcoBase.XThenY()) == coordinates(gd)
     @test coordinates(gd, EcoBase.YThenX()) == coordinates(gd)[:, [2, 1]]
 

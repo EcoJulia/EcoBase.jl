@@ -246,7 +246,7 @@ end
 
 # Methods for AbstractPlaces
 """
-    getcoords(plc)
+    getcoords(plc::AbstractPlaces)
 
 Return the location data saying where the places are, or the places themselves
 where they carry no geography at all.
@@ -270,30 +270,14 @@ end
     coordinateorder(loc)
 
 Return the order in which `loc` reports its two coordinate columns from
-indices() and coordinates(), defaulting to XThenY() where a type says nothing.
+indices() and coordinates(), defaulting to XThenY() where a type says nothing;
+places and assemblages answer for the location data they hold.
 """
 coordinateorder(::AbstractLocationData) = XThenY()
-
-"""
-    coordinates(loc)
-
-Return two columns of coordinates, one row per place, in whichever order
-coordinateorder() declares — and, for a grid, at the anchor cellanchor() does.
-"""
-function coordinates(loc::AbstractLocationData)
-    return error("function not defined for $(typeof(loc))")
+function coordinateorder(plc::AbstractPlaces{<:AbstractLocationData})
+    return coordinateorder(getcoords(plc))
 end
-
-"""
-    coordinates(loc, order)
-
-Return the coordinates of `loc` with its two columns in the requested
-AbstractCoordinateOrder, whatever order `loc` reports them in natively.
-"""
-function coordinates(loc::AbstractLocationData,
-                     order::AbstractCoordinateOrder)
-    return _incolumnorder(coordinates(loc), coordinateorder(loc), order)
-end
+coordinateorder(asm::AbstractAssemblage) = coordinateorder(places(asm))
 
 # Put the two columns of a location data matrix into the wanted order. Two
 # methods rather than a branch, so the choice is settled when the code is
@@ -320,6 +304,22 @@ xcells(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 Return how many cells the grid spans along y.
 """
 ycells(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+
+"""
+    xmin(grd)
+
+Return the coordinate of the first cell along x, referring to wherever in the
+cell cellanchor() says it does.
+"""
+xmin(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+
+"""
+    ymin(grd)
+
+Return the coordinate of the first cell along y, referring to wherever in the
+cell cellanchor() says it does.
+"""
+ymin(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 
 """
     indices(grd)
@@ -357,18 +357,62 @@ function indices(grd::AbstractGridded, i, order::AbstractCoordinateOrder,
 end
 
 """
+    coordinates(loc)
+
+Return two columns of coordinates, one row per place, in whichever order
+coordinateorder() declares — and, for a grid, at the anchor cellanchor() does.
+"""
+function coordinates(loc::AbstractLocationData)
+    return error("function not defined for $(typeof(loc))")
+end
+
+"""
+    coordinates(loc, order)
+
+Return the coordinates of `loc` with its two columns in the requested
+AbstractCoordinateOrder, whatever order `loc` reports them in natively.
+"""
+function coordinates(loc::AbstractLocationData,
+                     order::AbstractCoordinateOrder)
+    return _incolumnorder(coordinates(loc), coordinateorder(loc), order)
+end
+
+"""
+    coordinates(grd, order, anchor)
+
+Return the coordinates of `grd` with its columns in the requested AbstractCoordinateOrder
+referring to the requested AbstractCellAnchor.
+"""
+function coordinates(grd::AbstractGridded, order::AbstractCoordinateOrder,
+                     anchor::AbstractCellAnchor)
+    xy = _incolumnorder(coordinates(grd), coordinateorder(grd), XThenY())
+    return _incolumnorder(_atanchor(grd, xy, cellanchor(grd), anchor),
+                          XThenY(), order)
+end
+
+"""
     cellsize(grd)
 
-Return a cell's width and height — the grain at which the data was recorded.
+Return a cell's two side lengths — the grain at which the data was recorded —
+in whichever order coordinateorder() declares; xcellsize() and ycellsize()
+each name their own axis whatever that order is.
 """
-cellsize(grd) = xcellsize(grd), ycellsize(grd)
+function cellsize(grd)
+    return coordinateorder(grd) == XThenY() ? (xcellsize(grd), ycellsize(grd)) :
+           (ycellsize(grd), xcellsize(grd))
+end
 
 """
     cells(grd)
 
-Return the grid's shape, as the number of cells along x and along y.
+Return the grid's two cell counts, in whichever order coordinateorder()
+declares; xcells() and ycells() each name their own axis whatever that order
+is.
 """
-cells(grd) = xcells(grd), ycells(grd)
+function cells(grd)
+    return coordinateorder(grd) == XThenY() ? (xcells(grd), ycells(grd)) :
+           (ycells(grd), xcells(grd))
+end
 
 """
     cellanchor(grd)
@@ -422,25 +466,6 @@ end
 _atedges(edges, ::CellCorner) = edges[1:(end - 1)]
 _atedges(edges, ::CellCentre) = (edges[1:(end - 1)] .+ edges[2:end]) ./ 2
 
-"""
-    coordinates(grd, anchor)
-    coordinates(grd, order[, anchor])
-
-Return the coordinates of `grd` referring to the requested AbstractCellAnchor,
-and with its columns in the requested AbstractCoordinateOrder if one is given.
-"""
-function coordinates(grd::AbstractGridded, anchor::AbstractCellAnchor)
-    return coordinates(grd, coordinateorder(grd), anchor)
-end
-function coordinates(grd::AbstractGridded, order::AbstractCoordinateOrder,
-                     anchor::AbstractCellAnchor = cellanchor(grd))
-    # Reordered here rather than by calling coordinates(grd, XThenY()), which
-    # since the anchor gained a default is this very method.
-    xy = _incolumnorder(coordinates(grd), coordinateorder(grd), XThenY())
-    return _incolumnorder(_atanchor(grd, xy, cellanchor(grd), anchor),
-                          XThenY(), order)
-end
-
 # Move a grid's x-then-y coordinates from the anchor it reports them at to the
 # one wanted. The equal-anchor case takes the whole matrix and comes first
 # because it is the one that must not ask for cell widths: it is now the path
@@ -458,22 +483,6 @@ _shifted(vals, width, ::CellCentre, ::CellCorner) = vals .- width ./ 2
 _shifted(vals, width, ::CellCorner, ::CellCentre) = vals .+ width ./ 2
 
 # Methods for AbstractGrid — the regularly spaced case
-"""
-    xmin(grd)
-
-Return the coordinate of the first cell along x, referring to wherever in the
-cell cellanchor() says it does.
-"""
-xmin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
-
-"""
-    ymin(grd)
-
-Return the coordinate of the first cell along y, referring to wherever in the
-cell cellanchor() says it does.
-"""
-ymin(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
-
 """
     xcellsize(grd)
 
@@ -496,7 +505,15 @@ ycellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 Return one coordinate per cell along x, running from the first cell to the
 last.
 """
+# Three methods, none of them redundant. The untyped one is what lets a type
+# that merely forwards xmin/xcellsize/xcells answer xrange without being a grid
+# at all, which is how SpatialEcology gives xrange(assemblage); the
+# AbstractGridded stub stops an irregular grid silently inheriting a
+# constant-step range from it; and AbstractGrid, being regular, gets that range
+# back.
 xrange(grd) = xmin(grd):xcellsize(grd):xmax(grd) #includes intermediary points
+xrange(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+xrange(grd::AbstractGrid) = xmin(grd):xcellsize(grd):xmax(grd)
 
 """
     yrange(grd)
@@ -505,6 +522,8 @@ Return one coordinate per cell along y, running from the first cell to the
 last.
 """
 yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
+yrange(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+yrange(grd::AbstractGrid) = ymin(grd):ycellsize(grd):ymax(grd)
 
 """
     xmax(grd)
@@ -597,6 +616,3 @@ function createsummaryline(vec::AbstractVector{<:AbstractString})
     length(vec) < 6 && return linefunc(vec)
     return linefunc(vec[1:3]) * "..." * linefunc(vec[(end - 1):end])
 end
-
-# Each cell's extent along one axis, from that axis's edges.
-_widths(edges) = edges[2:end] .- edges[1:(end - 1)]

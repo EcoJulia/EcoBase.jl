@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: MIT
 
-function convert_to_image(var::AbstractVector, grd::AbstractGrid)
-    x = Matrix{Float64}(undef, reverse(cells(grd))...)
+function convert_to_image(var::AbstractVector, grd::AbstractGridded)
+    # Rows are y and columns are x, so ask for those two counts by name.
+    # cells() cannot serve here: it comes back in the grid's own declared
+    # order, so reversing it only gives (y, x) for a grid that declares x
+    # first.
+    x = Matrix{Float64}(undef, ycells(grd), xcells(grd))
     fill!(x, NaN)
     ind = indices(grd, XThenY(), CellCentre())
     xind, yind = view(ind, :, 1), view(ind, :, 2)
@@ -9,7 +13,7 @@ function convert_to_image(var::AbstractVector, grd::AbstractGrid)
     return x
 end
 
-RecipesBase.@recipe function f(var::AbstractVector, grd::AbstractGrid)
+RecipesBase.@recipe function f(var::AbstractVector, grd::AbstractGridded)
     seriestype := :heatmap
     aspect_ratio --> :equal
     grid --> false
