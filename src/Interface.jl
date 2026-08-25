@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: MIT
 
-import SparseArrays: nnz
-
 """
     asindices(x)
     asindices(x, names)
@@ -211,7 +209,7 @@ site.
 """
 richness(asm::AbstractAssemblage) = richness(occurrences(asm))
 richness(a::AbstractMatrix{Bool}) = collect(vec(colsum(a)))
-richness(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims = 1)))
+richness(a::AbstractMatrix) = collect(vec(mapslices(numnonzero, a, dims = 1)))
 
 """
     occupancy(asm)
@@ -221,7 +219,7 @@ size.
 """
 occupancy(asm::AbstractAssemblage) = occupancy(occurrences(asm))
 occupancy(a::AbstractMatrix{Bool}) = collect(vec(rowsum(a)))
-occupancy(a::AbstractMatrix) = collect(vec(mapslices(nnz, a, dims = 2)))
+occupancy(a::AbstractMatrix) = collect(vec(mapslices(numnonzero, a, dims = 2)))
 
 """
     nrecords(asm)
@@ -230,7 +228,7 @@ Return the total number of thing-in-place records, being the non-empty entries
 of the community matrix.
 """
 nrecords(asm::AbstractAssemblage) = nrecords(occurrences(asm))
-nrecords(a::AbstractMatrix) = nnz(a)
+nrecords(a::AbstractMatrix) = numnonzero(a)
 
 """
     cooccurring(asm, things...)
@@ -341,30 +339,20 @@ function indices(grd::AbstractGridded, idx)
 end
 
 """
-    indices(grd, order)
-    indices(grd, order, anchor)
-    indices(grd, i, order)
-    indices(grd, i, order, anchor)
+    indices(grd, order[, anchor])
+    indices(grd, i, order[, anchor])
 
 Return the cell indices of `grd` with its two columns in the requested
 AbstractCoordinateOrder, or column `i` of them; indices(grd, i) alone gives
 that column in the grid's own native order, and an anchor, which cell indices
 do not depend on, is accepted only for symmetry with coordinates().
 """
-function indices(grd::AbstractGridded, order::AbstractCoordinateOrder)
-    return _incolumnorder(indices(grd), coordinateorder(grd), order)
-end
-function indices(grd::AbstractGridded, i, order::AbstractCoordinateOrder)
-    return _incolumnorder(indices(grd), coordinateorder(grd), order)[:, i]
-end
-# Deliberately NOT delegating to the forms above, which would inherit their
-# ambiguity for exactly the grids these methods exist to serve.
 function indices(grd::AbstractGridded, order::AbstractCoordinateOrder,
-                 ::AbstractCellAnchor)
+                 ::AbstractCellAnchor = cellanchor(grd))
     return _incolumnorder(indices(grd), coordinateorder(grd), order)
 end
 function indices(grd::AbstractGridded, i, order::AbstractCoordinateOrder,
-                 ::AbstractCellAnchor)
+                 ::AbstractCellAnchor = cellanchor(grd))
     return _incolumnorder(indices(grd), coordinateorder(grd), order)[:, i]
 end
 
@@ -390,18 +378,19 @@ defaulting to CellCentre() where a grid says nothing.
 """
 cellanchor(::AbstractGridded) = CellCentre()
 
+# xrange() gives one coordinate per cell whatever the anchor, so it and the
+# edges differ by exactly the final edge — and on a rectilinear grid that edge
+# cannot be recovered from the cell coordinates, the last cell's width not being
+# among their differences. A regular grid needs no method here: EcoBase derives
+# its edges from the cell size.
 """
     xedges(grd)
 
 Return the cell boundaries of `grd` along x: one more value than there are
 cells, and so never what xrange() returns at any anchor.
 """
-# xrange() gives one coordinate per cell whatever the anchor, so it and the
-# edges differ by exactly the final edge — and on a rectilinear grid that edge
-# cannot be recovered from the cell coordinates, the last cell's width not being
-# among their differences. A regular grid needs no method here: EcoBase derives
-# its edges from the cell size.
 xedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+
 """
     yedges(grd)
 
@@ -435,7 +424,7 @@ _atedges(edges, ::CellCentre) = (edges[1:(end - 1)] .+ edges[2:end]) ./ 2
 
 """
     coordinates(grd, anchor)
-    coordinates(grd, order, anchor)
+    coordinates(grd, order[, anchor])
 
 Return the coordinates of `grd` referring to the requested AbstractCellAnchor,
 and with its columns in the requested AbstractCoordinateOrder if one is given.
@@ -444,20 +433,29 @@ function coordinates(grd::AbstractGridded, anchor::AbstractCellAnchor)
     return coordinates(grd, coordinateorder(grd), anchor)
 end
 function coordinates(grd::AbstractGridded, order::AbstractCoordinateOrder,
-                     anchor::AbstractCellAnchor)
-    xy = coordinates(grd, XThenY())
-    from = cellanchor(grd)
-    xs = _atanchor(xy[:, 1], _xwidths(grd), from, anchor)
-    ys = _atanchor(xy[:, 2], _ywidths(grd), from, anchor)
-    return _incolumnorder(hcat(xs, ys), XThenY(), order)
+                     anchor::AbstractCellAnchor = cellanchor(grd))
+    # Reordered here rather than by calling coordinates(grd, XThenY()), which
+    # since the anchor gained a default is this very method.
+    xy = _incolumnorder(coordinates(grd), coordinateorder(grd), XThenY())
+    return _incolumnorder(_atanchor(grd, xy, cellanchor(grd), anchor),
+                          XThenY(), order)
 end
 
-# Move coordinates from the anchor they were reported at to the one wanted.
-# The width is a scalar for a regular grid and one value per place for a
-# rectilinear one, so this broadcasts over either.
-_atanchor(vals, width, ::A, ::A) where {A <: AbstractCellAnchor} = vals
-_atanchor(vals, width, ::CellCentre, ::CellCorner) = vals .- width ./ 2
-_atanchor(vals, width, ::CellCorner, ::CellCentre) = vals .+ width ./ 2
+# Move a grid's x-then-y coordinates from the anchor it reports them at to the
+# one wanted. The equal-anchor case takes the whole matrix and comes first
+# because it is the one that must not ask for cell widths: it is now the path
+# every coordinates(grd, order) call takes, and a gridded type that is not a
+# regular AbstractGrid has no widths to give.
+_atanchor(grd, xy, ::A, ::A) where {A <: AbstractCellAnchor} = xy
+function _atanchor(grd, xy, from::AbstractCellAnchor, to::AbstractCellAnchor)
+    return hcat(_shifted(xy[:, 1], _xwidths(grd), from, to),
+                _shifted(xy[:, 2], _ywidths(grd), from, to))
+end
+
+# Half a cell along one axis, broadcast across every place from the grid's
+# cell size.
+_shifted(vals, width, ::CellCentre, ::CellCorner) = vals .- width ./ 2
+_shifted(vals, width, ::CellCorner, ::CellCentre) = vals .+ width ./ 2
 
 # Methods for AbstractGrid — the regularly spaced case
 """
@@ -585,7 +583,7 @@ nzrows(a::AbstractMatrix) = findall(vec(sum(a, dims = 2) .> 0))
 # Which columns — places — hold at least one thing.
 nzcols(a::AbstractMatrix) = findall(vec(sum(a, dims = 1) .> 0))
 # How many entries record something present, rather than what they add up to.
-nnz(a::AbstractArray) = sum(a .> 0)
+numnonzero(a::AbstractArray) = sum(a .> 0)
 # One total per place, summing over the things found there.
 colsum(x) = sum(x, dims = 1)
 # One total per thing, summing over the places it was found in.
