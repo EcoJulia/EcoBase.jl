@@ -258,20 +258,23 @@ end
 
 """
     coordinates(plc)
+    coordinates(asm)
 
-Return the coordinates of the places, as their location data reports them.
+Return the coordinates of the places, as their location data reports them; an
+assemblage answers for its places.
 """
 function coordinates(plc::AbstractPlaces)
     return error("function not defined for $(typeof(plc))")
 end
+coordinates(asm::AbstractAssemblage) = coordinates(places(asm))
 
 # Methods for AbstractLocationData
 """
     coordinateorder(loc)
 
 Return the order in which `loc` reports its two coordinate columns from
-indices() and coordinates(), defaulting to XThenY() where a type says nothing;
-places and assemblages answer for the location data they hold.
+indices() and coordinates(), defaulting to XThenY() where a type says
+nothing; places and assemblages answer for the location data they hold.
 """
 coordinateorder(::AbstractLocationData) = XThenY()
 function coordinateorder(plc::AbstractPlaces{<:AbstractLocationData})
@@ -291,48 +294,86 @@ end
 
 # Methods for AbstractGridded — the index contract, which every kind of grid
 # answers whatever its spacing
+
+# A gridded question has the same answer whether it is put to the grid, to
+# places holding one, or to an assemblage of those places, so the derived
+# methods below are written once over _AnyGridded rather than once per host,
+# and _gridded takes any of the three to the grid the answer comes from. The
+# assemblage alias names its places parameter so that an assemblage with no
+# location data is excluded by the signature rather than by failing later.
+#
+# Arities here are always written out, never gathered into an args... method.
+# A method taking Vararg{Any} on one of these types is ambiguous with every
+# multi-argument method of the same generic, which is how the need for this
+# section was found: a downstream package forwarding that way lost xmax(),
+# xrange() and the anchor forms on exactly the types its users hold.
+const _GriddedAssemblage = AbstractAssemblage{<:Real, <:AbstractThings,
+                                              <:AbstractPlaces{<:AbstractGridded}}
+const _GriddedHolder = Union{AbstractPlaces{<:AbstractGridded},
+                             _GriddedAssemblage}
+const _AnyGridded = Union{AbstractGridded, _GriddedHolder}
+
+# The grid behind x, which is x itself when x is one.
+_gridded(grd::AbstractGridded) = grd
+_gridded(plc::AbstractPlaces{<:AbstractGridded}) = getcoords(plc)
+_gridded(asm::_GriddedAssemblage) = _gridded(places(asm))
+
 """
     xcells(grd)
 
-Return how many cells the grid spans along x.
+Return how many cells the grid spans along x. Places holding a grid, and
+assemblages of them, answer for it.
 """
 xcells(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 
 """
     ycells(grd)
 
-Return how many cells the grid spans along y.
+Return how many cells the grid spans along y. Places holding a grid, and
+assemblages of them, answer for it.
 """
 ycells(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 
 """
     xmin(grd)
+    xmin(grd, anchor)
 
-Return the coordinate of the first cell along x, referring to wherever in the
-cell cellanchor() says it does.
+Return the coordinate of the first cell along x, referring to the requested
+AbstractCellAnchor, or to whichever cellanchor() declares if none is given.
+Places holding a grid, and assemblages of them, answer for it.
 """
 xmin(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+function xmin(x::_AnyGridded, anchor::AbstractCellAnchor)
+    return first(xrange(x, anchor))
+end
 
 """
     ymin(grd)
+    ymin(grd, anchor)
 
-Return the coordinate of the first cell along y, referring to wherever in the
-cell cellanchor() says it does.
+Return the coordinate of the first cell along y, referring to the requested
+AbstractCellAnchor, or to whichever cellanchor() declares if none is given.
+Places holding a grid, and assemblages of them, answer for it.
 """
 ymin(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
+function ymin(x::_AnyGridded, anchor::AbstractCellAnchor)
+    return first(yrange(x, anchor))
+end
 
 """
     indices(grd)
 
 Return the two grid indices of the cell each place falls in, one row per
-place, in whichever order coordinateorder() declares.
+place, in whichever order coordinateorder() declares. Places holding a grid,
+and assemblages of them, answer for it.
 """
 indices(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 
 """
     indices(grd, i)
 
-Return column `i` of indices(grd), in the grid's own native order.
+Return column `i` of indices(grd), in the grid's own native order. Places
+holding a grid, and assemblages of them, answer for it.
 """
 function indices(grd::AbstractGridded, idx)
     return error("function not defined for $(typeof(grd))")
@@ -344,8 +385,9 @@ end
 
 Return the cell indices of `grd` with its two columns in the requested
 AbstractCoordinateOrder, or column `i` of them; indices(grd, i) alone gives
-that column in the grid's own native order, and an anchor, which cell indices
-do not depend on, is accepted only for symmetry with coordinates().
+that column in the grid's own native order, and an anchor, which cell
+indices do not depend on, is accepted only for symmetry with coordinates().
+Places holding a grid, and assemblages of them, answer for it.
 """
 function indices(grd::AbstractGridded, order::AbstractCoordinateOrder,
                  ::AbstractCellAnchor = cellanchor(grd))
@@ -370,36 +412,47 @@ end
     coordinates(loc, order)
 
 Return the coordinates of `loc` with its two columns in the requested
-AbstractCoordinateOrder, whatever order `loc` reports them in natively.
+AbstractCoordinateOrder, whatever order it reports them in natively. Places
+and assemblages answer for the location data they hold.
 """
 function coordinates(loc::AbstractLocationData,
                      order::AbstractCoordinateOrder)
     return _incolumnorder(coordinates(loc), coordinateorder(loc), order)
 end
+function coordinates(plc::AbstractPlaces{<:AbstractLocationData},
+                     order::AbstractCoordinateOrder)
+    return _incolumnorder(coordinates(plc), coordinateorder(plc), order)
+end
+function coordinates(asm::AbstractAssemblage,
+                     order::AbstractCoordinateOrder)
+    return coordinates(places(asm), order)
+end
 
 """
     coordinates(grd, order, anchor)
 
-Return the coordinates of `grd` with its columns in the requested AbstractCoordinateOrder
-referring to the requested AbstractCellAnchor.
+Return the coordinates of `grd` with its columns in the requested
+AbstractCoordinateOrder referring to the requested AbstractCellAnchor.
+Places holding a grid, and assemblages of them, answer for it.
 """
-function coordinates(grd::AbstractGridded, order::AbstractCoordinateOrder,
+function coordinates(x::_AnyGridded, order::AbstractCoordinateOrder,
                      anchor::AbstractCellAnchor)
-    xy = _incolumnorder(coordinates(grd), coordinateorder(grd), XThenY())
-    return _incolumnorder(_atanchor(grd, xy, cellanchor(grd), anchor),
+    xy = _incolumnorder(coordinates(x), coordinateorder(x), XThenY())
+    return _incolumnorder(_atanchor(x, xy, cellanchor(x), anchor),
                           XThenY(), order)
 end
 
 """
     cellsize(grd)
 
-Return a cell's two side lengths — the grain at which the data was recorded —
-in whichever order coordinateorder() declares; xcellsize() and ycellsize()
-each name their own axis whatever that order is.
+Return a cell's two side lengths — the grain at which the data was recorded
+— in whichever order coordinateorder() declares; xcellsize() and ycellsize()
+each name their own axis whatever that order is. Places holding a grid, and
+assemblages of them, answer for it.
 """
-function cellsize(grd)
-    return coordinateorder(grd) == XThenY() ? (xcellsize(grd), ycellsize(grd)) :
-           (ycellsize(grd), xcellsize(grd))
+function cellsize(x::_AnyGridded)
+    return coordinateorder(x) == XThenY() ? (xcellsize(x), ycellsize(x)) :
+           (ycellsize(x), xcellsize(x))
 end
 
 """
@@ -407,18 +460,19 @@ end
 
 Return the grid's two cell counts, in whichever order coordinateorder()
 declares; xcells() and ycells() each name their own axis whatever that order
-is.
+is. Places holding a grid, and assemblages of them, answer for it.
 """
-function cells(grd)
-    return coordinateorder(grd) == XThenY() ? (xcells(grd), ycells(grd)) :
-           (ycells(grd), xcells(grd))
+function cells(x::_AnyGridded)
+    return coordinateorder(x) == XThenY() ? (xcells(x), ycells(x)) :
+           (ycells(x), xcells(x))
 end
 
 """
     cellanchor(grd)
 
 Return what a cell's reported coordinate refers to within that cell,
-defaulting to CellCentre() where a grid says nothing.
+defaulting to CellCentre() where a grid says nothing. Places holding a grid,
+and assemblages of them, answer for it.
 """
 cellanchor(::AbstractGridded) = CellCentre()
 
@@ -431,7 +485,8 @@ cellanchor(::AbstractGridded) = CellCentre()
     xedges(grd)
 
 Return the cell boundaries of `grd` along x: one more value than there are
-cells, and so never what xrange() returns at any anchor.
+cells, and so never what xrange() returns at any anchor. Places holding a
+grid, and assemblages of them, answer for it.
 """
 xedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 
@@ -439,32 +494,77 @@ xedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
     yedges(grd)
 
 Return the cell boundaries of `grd` along y, as xedges() does along x.
+Places holding a grid, and assemblages of them, answer for it.
 """
 yedges(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
 
 """
+    xrange(grd)
     xrange(grd, anchor)
 
-Return one coordinate per cell along x, referring to the requested
-AbstractCellAnchor rather than to whichever the grid itself declares.
+Return one coordinate per cell along x, from the first cell to the last,
+referring to the requested AbstractCellAnchor or to whichever cellanchor()
+declares if none is given. Places holding a grid, and assemblages of them,
+answer for it.
 """
-function xrange(grd::AbstractGridded, anchor::AbstractCellAnchor)
-    return _atedges(xedges(grd), anchor)
+function xrange(x::_AnyGridded, anchor::AbstractCellAnchor = cellanchor(x))
+    return _atedges(xedges(x), anchor)
 end
 
 """
+    yrange(grd)
     yrange(grd, anchor)
 
-Return one coordinate per cell along y, referring to the requested
-AbstractCellAnchor rather than to whichever the grid itself declares.
+Return one coordinate per cell along y, as xrange() does along x.
 """
-function yrange(grd::AbstractGridded, anchor::AbstractCellAnchor)
-    return _atedges(yedges(grd), anchor)
+function yrange(x::_AnyGridded, anchor::AbstractCellAnchor = cellanchor(x))
+    return _atedges(yedges(x), anchor)
 end
 
-# One coordinate per cell, taken from that cell's own pair of edges.
+"""
+    xmax(grd)
+    xmax(grd, anchor)
+
+Return the coordinate of the last cell along x, referring to the requested
+AbstractCellAnchor, or to whichever cellanchor() declares if none is given.
+Places holding a grid, and assemblages of them, answer for it.
+"""
+xmax(x::_AnyGridded) = last(xrange(x))
+function xmax(x::_AnyGridded, anchor::AbstractCellAnchor)
+    return last(xrange(x, anchor))
+end
+
+"""
+    ymax(grd)
+    ymax(grd, anchor)
+
+Return the coordinate of the last cell along y, as xmax() does along x.
+"""
+ymax(x::_AnyGridded) = last(yrange(x))
+function ymax(x::_AnyGridded, anchor::AbstractCellAnchor)
+    return last(yrange(x, anchor))
+end
+
+# One coordinate per cell, taken from that cell's own pair of edges. This is
+# the only route from a grid's geometry to its cell coordinates, so xrange,
+# xmin(grd, anchor) and xmax(grd, anchor) all read the same edges rather than
+# each rebuilding the geometry from xmin, xcellsize and xcells.
+#
+# The unanchored xmax and ymax deliberately do NOT go through it. They take
+# the last of the grid's OWN xrange, so a grid answering from a lookup keeps
+# its own values instead of a reconstruction of them - which is also what lets
+# them work on a grid whose cells are not all one size, where xcellsize does
+# not exist and the arithmetic they used to do could not be written.
 _atedges(edges, ::CellCorner) = edges[1:(end - 1)]
 _atedges(edges, ::CellCentre) = (edges[1:(end - 1)] .+ edges[2:end]) ./ 2
+
+# A regular grid's edges are a range and so are its cell coordinates, and the
+# generic method above would return a vector. Keeping the range preserves the
+# step that callers index, plot and take differences of.
+function _atedges(edges::AbstractRange, ::CellCentre)
+    half = step(edges) / 2
+    return (first(edges) + half):step(edges):(last(edges) - half)
+end
 
 # Move a grid's x-then-y coordinates from the anchor it reports them at to the
 # one wanted. The equal-anchor case takes the whole matrix and comes first
@@ -499,46 +599,6 @@ grid records its places along y.
 """
 ycellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 
-"""
-    xrange(grd)
-
-Return one coordinate per cell along x, running from the first cell to the
-last.
-"""
-# Three methods, none of them redundant. The untyped one is what lets a type
-# that merely forwards xmin/xcellsize/xcells answer xrange without being a grid
-# at all, which is how SpatialEcology gives xrange(assemblage); the
-# AbstractGridded stub stops an irregular grid silently inheriting a
-# constant-step range from it; and AbstractGrid, being regular, gets that range
-# back.
-xrange(grd) = xmin(grd):xcellsize(grd):xmax(grd) #includes intermediary points
-xrange(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
-xrange(grd::AbstractGrid) = xmin(grd):xcellsize(grd):xmax(grd)
-
-"""
-    yrange(grd)
-
-Return one coordinate per cell along y, running from the first cell to the
-last.
-"""
-yrange(grd) = ymin(grd):ycellsize(grd):ymax(grd)
-yrange(grd::AbstractGridded) = error("function not defined for $(typeof(grd))")
-yrange(grd::AbstractGrid) = ymin(grd):ycellsize(grd):ymax(grd)
-
-"""
-    xmax(grd)
-
-Return the coordinate of the last cell along x.
-"""
-xmax(grd) = xmin(grd) + xcellsize(grd) * (xcells(grd) - 1)
-
-"""
-    ymax(grd)
-
-Return the coordinate of the last cell along y.
-"""
-ymax(grd) = ymin(grd) + ycellsize(grd) * (ycells(grd) - 1)
-
 # Every cell is the same size, so the edges follow from the first label, that
 # size and the count, and the type need supply nothing.
 function xedges(grd::AbstractGrid)
@@ -561,6 +621,37 @@ _firstedge(lo, size, ::CellCorner) = lo
 # The width of the cell a place sits in, along one axis — constant here.
 _xwidths(grd::AbstractGrid) = xcellsize(grd)
 _ywidths(grd::AbstractGrid) = ycellsize(grd)
+
+# What a holder cannot derive it hands to its grid. These are the primitives a
+# gridded type answers for itself, plus the two private widths the anchor
+# conversion needs; everything derived from them is written over _AnyGridded
+# where it is defined, and so already answers for all three hosts.
+#
+# xrange and yrange are here although EcoBase can derive them, and must be: a
+# grid may answer them from a lookup of its own that no derivation reproduces
+# - SpatialEcology's RasterData does - and asking the grid is the only way to
+# get that answer rather than a reconstruction of it.
+for f in (:xcells, :ycells, :xmin, :ymin, :xcellsize, :ycellsize, :xrange,
+          :yrange, :xedges, :yedges, :cellanchor, :indices, :_xwidths,
+          :_ywidths)
+    @eval $f(x::_GriddedHolder) = $f(_gridded(x))
+end
+
+# indices() is the one generic here taking an untyped second argument, so its
+# further arities cannot be written over _AnyGridded the way the rest are:
+# (AbstractGridded, Any) and (_AnyGridded, AbstractCoordinateOrder) leave
+# neither method more specific. A holder gets its own instead, at each arity
+# and never through args..., for the reason given where _AnyGridded is
+# defined.
+indices(x::_GriddedHolder, i) = indices(_gridded(x), i)
+function indices(x::_GriddedHolder, order::AbstractCoordinateOrder,
+                 anchor::AbstractCellAnchor = cellanchor(x))
+    return indices(_gridded(x), order, anchor)
+end
+function indices(x::_GriddedHolder, i, order::AbstractCoordinateOrder,
+                 anchor::AbstractCellAnchor = cellanchor(x))
+    return indices(_gridded(x), i, order, anchor)
+end
 
 # Methods extending Base, both of them on assemblages. The import declares
 # that intent where it happens, and puts show and view in EcoBase's own

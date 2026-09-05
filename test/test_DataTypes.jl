@@ -109,6 +109,53 @@ EcoBase.xcells(c::ToyCornerGrid) = xcells(c.grd)
 EcoBase.ycells(c::ToyCornerGrid) = ycells(c.grd)
 EcoBase.cellanchor(::ToyCornerGrid) = EcoBase.CellCorner()
 
+# Places that hold a grid, and an assemblage of those places - the two types a
+# caller actually has in hand once location data is wrapped up in a package.
+# Neither is location data itself, and neither implements a single grid
+# accessor: everything they answer, they answer because EcoBase lifts the
+# gridded interface onto them.
+struct ToyGriddedPlaces <: EcoBase.AbstractPlaces{ToyGrid}
+    grd::ToyGrid
+end
+
+EcoBase.getcoords(plc::ToyGriddedPlaces) = plc.grd
+EcoBase.coordinates(plc::ToyGriddedPlaces) = EcoBase.coordinates(plc.grd)
+EcoBase.nplaces(plc::ToyGriddedPlaces) = size(EcoBase.indices(plc.grd), 1)
+function EcoBase.placenames(plc::ToyGriddedPlaces)
+    return ["Cell $i" for i in 1:nplaces(plc)]
+end
+
+struct ToyGridThings <: EcoBase.AbstractThings end
+
+EcoBase.nthings(::ToyGridThings) = 2
+EcoBase.thingnames(::ToyGridThings) = ["Thing 1", "Thing 2"]
+
+struct ToyGriddedAssemblage <:
+       EcoBase.AbstractAssemblage{Float64, ToyGridThings, ToyGriddedPlaces}
+    places::ToyGriddedPlaces
+end
+
+EcoBase.places(asm::ToyGriddedAssemblage) = asm.places
+EcoBase.things(::ToyGriddedAssemblage) = ToyGridThings()
+function EcoBase.occurrences(asm::ToyGriddedAssemblage)
+    return ones(2, nplaces(places(asm)))
+end
+
+# The same pair with no location data at all, which must NOT pick any of the
+# gridded interface up - the Microbiome branch.
+struct ToyFlatPlaces <: EcoBase.AbstractPlaces{Nothing} end
+
+EcoBase.nplaces(::ToyFlatPlaces) = 3
+EcoBase.placenames(::ToyFlatPlaces) = ["a", "b", "c"]
+
+struct ToyFlatAssemblage <:
+       EcoBase.AbstractAssemblage{Float64, ToyGridThings, ToyFlatPlaces}
+end
+
+EcoBase.places(::ToyFlatAssemblage) = ToyFlatPlaces()
+EcoBase.things(::ToyFlatAssemblage) = ToyGridThings()
+EcoBase.occurrences(::ToyFlatAssemblage) = ones(2, 3)
+
 @testset "Location data hierarchy" begin
     # The relations downstream packages rely on when they subtype EcoBase.
     @test EcoBase.AbstractPoints <: EcoBase.AbstractLocationData
@@ -271,6 +318,29 @@ end
     @test xedges(crn) == xedges(grd) .+ 0.5
     @test last(xedges(grd)) == 26.0
 
+    # The extremes take an anchor too, and are the ends of the range asked for
+    # at that same anchor - so the four cannot drift apart.
+    for a in (EcoBase.CellCentre(), EcoBase.CellCorner()), g in (grd, crn)
+        @test xmin(g, a) == first(xrange(g, a))
+        @test xmax(g, a) == last(xrange(g, a))
+        @test ymin(g, a) == first(yrange(g, a))
+        @test ymax(g, a) == last(yrange(g, a))
+    end
+
+    # Asked for the anchor the grid already uses, they are the plain forms.
+    for g in (grd, crn)
+        @test xmin(g, cellanchor(g)) == xmin(g)
+        @test xmax(g, cellanchor(g)) == xmax(g)
+        @test ymin(g, cellanchor(g)) == ymin(g)
+        @test ymax(g, cellanchor(g)) == ymax(g)
+    end
+
+    # Corners sit half a cell below centres, on both axes and at both ends.
+    @test xmin(grd, EcoBase.CellCorner()) == xmin(grd) - 0.5
+    @test xmax(grd, EcoBase.CellCorner()) == xmax(grd) - 0.5
+    @test ymin(grd, EcoBase.CellCorner()) == ymin(grd) - 1.0
+    @test ymax(grd, EcoBase.CellCorner()) == ymax(grd) - 1.0
+
     # Asking for an anchor gives the labels at that anchor, whichever the grid
     # itself uses - and the two grids then agree, being the same geometry
     # described from different corners.
@@ -328,6 +398,72 @@ end
     # The scatter recipe reads column 1 as x and column 2 as y.
     @test coordinates(pnt)[:, 1] == [21.5, 22.5, 23.5]
     @test coordinates(pnt)[:, 2] == [-28.5, -26.5, -24.5]
+end
+
+@testset "Gridded interface reaches places and assemblages" begin
+    grd = ToyGrid(21.5, -28.5, 1.0, 2.0, 4, 5)
+    plc = ToyGriddedPlaces(grd)
+    asm = ToyGriddedAssemblage(plc)
+
+    # Neither host defines any of these. Each must give the grid's own answer,
+    # because a caller holding an assemblage has no reason to unwrap it twice
+    # to ask where its cells are.
+    for host in (plc, asm)
+        for f in (xcells, ycells, xmin, ymin, xmax, ymax, xcellsize, ycellsize,
+                  xrange, yrange, xedges, yedges, cellanchor, cells, cellsize,
+                  indices, coordinates, coordinateorder)
+            @test f(host) == f(grd)
+        end
+
+        # The anchor forms, which before this were the grid's alone - so an
+        # assemblage answered xmin(asm, corner) and not xmax(asm, corner).
+        for f in (xmin, ymin, xmax, ymax, xrange, yrange),
+            anchor in (EcoBase.CellCentre(), EcoBase.CellCorner())
+
+            @test f(host, anchor) == f(grd, anchor)
+        end
+
+        # ... and the order forms, at every arity.
+        for order in (EcoBase.XThenY(), EcoBase.YThenX())
+            @test indices(host, order) == indices(grd, order)
+            @test indices(host, 1, order) == indices(grd, 1, order)
+            @test coordinates(host, order) == coordinates(grd, order)
+            for anchor in (EcoBase.CellCentre(), EcoBase.CellCorner())
+                @test indices(host, order, anchor) ==
+                      indices(grd, order, anchor)
+                @test coordinates(host, order, anchor) ==
+                      coordinates(grd, order, anchor)
+            end
+        end
+
+        @test indices(host, 1) == indices(grd, 1)
+        @test indices(host, 2) == indices(grd, 2)
+    end
+
+    # The corner anchor really is half a cell down, so the agreement above is
+    # over answers that differ rather than over a constant.
+    @test xmin(asm, EcoBase.CellCorner()) == xmin(asm) - xcellsize(asm) / 2
+    @test ymax(asm, EcoBase.CellCorner()) == ymax(asm) - ycellsize(asm) / 2
+
+    # A place with no location data picks none of this up, and neither does an
+    # assemblage of such places. xmax(), cells() and cellsize() were untyped
+    # so that a type holding a grid without being one could still reach them;
+    # the lifting above is what serves those types now, so the fallbacks no
+    # longer have to answer for everything else as well.
+    for flat in (ToyFlatPlaces(), ToyFlatAssemblage())
+        @test_throws MethodError xmin(flat)
+        @test_throws MethodError xmax(flat)
+        @test_throws MethodError cells(flat)
+        @test_throws MethodError cellsize(flat)
+        @test_throws MethodError cellanchor(flat)
+        @test_throws MethodError xrange(flat, EcoBase.CellCorner())
+    end
+
+    # Its own things and places still work, which is what says the exclusion
+    # above is by location data rather than by the type being unusable.
+    flatasm = ToyFlatAssemblage()
+    @test nplaces(flatasm) == 3
+    @test nthings(flatasm) == 2
 end
 
 end

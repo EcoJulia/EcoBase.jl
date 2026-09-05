@@ -7,10 +7,11 @@ using SpatialEcology
 using EcoBase
 
 # SpatialEcology reaches EcoBase through the things / places / assemblage axis,
-# with ComMatrix answering EcoBase's generics directly. It is also the package
-# that relies on EcoBase's untyped grid derivations (cells, cellsize, xrange
-# and friends) for types that are not grids, so it is the one most exposed to
-# any change in how those are declared.
+# with ComMatrix answering EcoBase's generics directly. It is also the only
+# downstream that asks the grid accessors of types which are not grids - its
+# Locations and its Assemblage - so it is the one that shows whether EcoBase
+# lifts them correctly, and the one exposed to any change in how they are
+# declared.
 @testset "SpatialEcology-EcoBase interface" begin
     numspecies = 10
     numcommunities = 8
@@ -77,10 +78,11 @@ end
     @test length(yrange(gd)) == ycells(gd)
 
     # ... and the same six on the ASSEMBLAGE, which is not a grid, nor even
-    # location data. SpatialEcology forwards only the primitives and relies on
-    # EcoBase's untyped derivations for the rest, so these are its public API
-    # by way of EcoBase's method signatures. Testing them on gd alone missed a
-    # release in which four of the six stopped working here.
+    # location data. It answers them because EcoBase lifts the gridded
+    # interface onto anything holding gridded location data, so they are
+    # SpatialEcology's public API by way of EcoBase's method signatures.
+    # Testing them on gd alone missed a release in which four of the six
+    # stopped working here.
     @test cells(asm) == cells(gd)
     @test cellsize(asm) == cellsize(gd)
     @test xrange(asm) == xrange(gd)
@@ -96,6 +98,27 @@ end
     # cells() and cellsize() above consult an order at all.
     @test coordinateorder(asm) === coordinateorder(gd)
     @test coordinateorder(places(asm)) === coordinateorder(gd)
+
+    # The whole lifted surface, on both hosts. Four of these did not exist on
+    # an assemblage before EcoBase lifted them, and the two that did worked
+    # only because SpatialEcology happened to forward through args... - the
+    # same forwarding that made xmin() ambiguous, so fixing one removed the
+    # other.
+    for host in (places(asm), asm)
+        for f in (xcells, ycells, xmin, ymin, xmax, ymax, xcellsize, ycellsize,
+                  xrange, yrange, cells, cellsize, indices, coordinates,
+                  EcoBase.xedges, EcoBase.yedges, EcoBase.cellanchor)
+            @test f(host) == f(gd)
+        end
+        for f in (xmin, ymin, xmax, ymax, xrange, yrange),
+            anchor in (EcoBase.CellCentre(), EcoBase.CellCorner())
+
+            @test f(host, anchor) == f(gd, anchor)
+        end
+        @test coordinates(host, EcoBase.YThenX()) ==
+              coordinates(gd, EcoBase.YThenX())
+        @test indices(host, 1, EcoBase.YThenX()) == indices(gd, 2)
+    end
     @test coordinates(gd, EcoBase.XThenY()) == coordinates(gd)
     @test coordinates(gd, EcoBase.YThenX()) == coordinates(gd)[:, [2, 1]]
 
@@ -111,6 +134,20 @@ end
     # pinning another package's current signature would turn their one-word
     # fix (idx::Integer) into a failure in EcoBase's CI. The mechanism is
     # pinned instead by ToyGridUntyped in test_DataTypes.jl, which we own.
+end
+
+# EcoBase owns these generics, so an ambiguity between its methods and a
+# downstream's is EcoBase's to notice even when the fix belongs downstream.
+# Four went unnoticed until they were looked for: SpatialEcology forwarded
+# xmin and ymin as f(x::T, args...), which is ambiguous with every
+# multi-argument method of the same generic, because the wrapper wins on
+# argument one and EcoBase on argument two.
+@testset "No ambiguities between EcoBase and SpatialEcology" begin
+    ambiguities = Test.detect_ambiguities(SpatialEcology, recursive = false)
+    for (a, b) in ambiguities
+        @warn "Ambiguous: $(a.sig)\n         vs $(b.sig)"
+    end
+    @test isempty(ambiguities)
 end
 
 end

@@ -13,6 +13,20 @@
     row and column
   - Add xedges()/yedges() giving the n + 1 cell boundaries, and
     xrange()/yrange()/coordinates() taking the anchor wanted
+  - Lift the whole gridded interface onto places that hold gridded location
+    data and onto assemblages of those places, so an assemblage answers
+    xmin(), xmax(), xrange(), xedges(), cellanchor() and the anchor and order
+    forms exactly as the grid it holds does
+  - cells(), cellsize(), xmax() and ymax() are declared on gridded types and
+    on the places and assemblages holding them, rather than being untyped.
+    They were untyped only so that a type holding a grid without being one
+    could reach them, which the lifting above now does properly
+  - xrange()/yrange() are derived from xedges()/yedges() at the anchor the
+    grid declares, rather than being rebuilt separately as a constant-step
+    range, and xmax()/ymax() are the last of that range rather than
+    arithmetic on xcellsize(). Both give the same answers on a regular grid,
+    including the same range type, and both now work on a grid whose cells
+    are not all one size
 - v0.1.7
   - Add in metadata
 - v0.1.6
