@@ -570,7 +570,7 @@ end
 # one wanted. The equal-anchor case takes the whole matrix and comes first
 # because it is the one that must not ask for cell widths: it is now the path
 # every coordinates(grd, order) call takes, and a gridded type that is not a
-# regular AbstractGrid has no widths to give.
+# regular AbstractRegularGrid has no widths to give.
 _atanchor(grd, xy, ::A, ::A) where {A <: AbstractCellAnchor} = xy
 function _atanchor(grd, xy, from::AbstractCellAnchor, to::AbstractCellAnchor)
     return hcat(_shifted(xy[:, 1], _xwidths(grd), from, to),
@@ -582,14 +582,16 @@ end
 _shifted(vals, width, ::CellCentre, ::CellCorner) = vals .- width ./ 2
 _shifted(vals, width, ::CellCorner, ::CellCentre) = vals .+ width ./ 2
 
-# Methods for AbstractGrid — the regularly spaced case
+# Methods for AbstractRegularGrid — the regularly spaced case
 """
     xcellsize(grd)
 
 Return the width of one cell — the grain, or spatial resolution, at which the
 grid records its places along x.
 """
-xcellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+function xcellsize(grd::AbstractRegularGrid)
+    return error("function not defined for $(typeof(grd))")
+end
 
 """
     ycellsize(grd)
@@ -597,15 +599,17 @@ xcellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
 Return the height of one cell — the grain, or spatial resolution, at which the
 grid records its places along y.
 """
-ycellsize(grd::AbstractGrid) = error("function not defined for $(typeof(grd))")
+function ycellsize(grd::AbstractRegularGrid)
+    return error("function not defined for $(typeof(grd))")
+end
 
 # Every cell is the same size, so the edges follow from the first label, that
 # size and the count, and the type need supply nothing.
-function xedges(grd::AbstractGrid)
+function xedges(grd::AbstractRegularGrid)
     return _regularedges(xmin(grd), xcellsize(grd), xcells(grd),
                          cellanchor(grd))
 end
-function yedges(grd::AbstractGrid)
+function yedges(grd::AbstractRegularGrid)
     return _regularedges(ymin(grd), ycellsize(grd), ycells(grd),
                          cellanchor(grd))
 end
@@ -619,8 +623,8 @@ _firstedge(lo, size, ::CellCentre) = lo - size / 2
 _firstedge(lo, size, ::CellCorner) = lo
 
 # The width of the cell a place sits in, along one axis — constant here.
-_xwidths(grd::AbstractGrid) = xcellsize(grd)
-_ywidths(grd::AbstractGrid) = ycellsize(grd)
+_xwidths(grd::AbstractRegularGrid) = xcellsize(grd)
+_ywidths(grd::AbstractRegularGrid) = ycellsize(grd)
 
 # What a holder cannot derive it hands to its grid. These are the primitives a
 # gridded type answers for itself, plus the two private widths the anchor

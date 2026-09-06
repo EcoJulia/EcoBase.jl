@@ -9,8 +9,12 @@
     and return their columns appropriately with knowing the native order or
     slicing the result to find out
   - Add AbstractAreas and AbstractGridded between AbstractLocationData and
-    AbstractGrid, for locations that cover an area and for those addressed by
-    row and column
+    the regular grid type, for locations that cover an area and for those
+    addressed by row and column
+  - Rename AbstractGrid to AbstractRegularGrid, which says what distinguishes
+    it from the AbstractGridded above it - one cell size describing every
+    cell. AbstractGrid is deprecated and still resolves to the same type, so
+    a package subtyping it keeps working and only warns
   - Add xedges()/yedges() giving the n + 1 cell boundaries, and
     xrange()/yrange()/coordinates() taking the anchor wanted
   - Lift the whole gridded interface onto places that hold gridded location

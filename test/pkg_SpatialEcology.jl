@@ -44,10 +44,13 @@ end
 
 @testset "SpatialEcology grids through EcoBase" begin
     # The subtype relations this work must preserve. SEGrid and GridTopology
-    # reach EcoBase.AbstractGrid by different routes - one through SEGrid, one
-    # directly - and both must survive anything inserted above AbstractGrid.
-    @test SpatialEcology.SEGrid <: EcoBase.AbstractGrid
-    @test SpatialEcology.GridTopology <: EcoBase.AbstractGrid
+    # reach EcoBase.AbstractRegularGrid by different routes - one through
+    # SEGrid, one directly - and both must survive anything inserted above it.
+    # Note that SpatialEcology spells it AbstractGrid, the deprecated name: it
+    # is the same type, and this pair passing is what says the shim carries a
+    # real downstream rather than only our own toy.
+    @test SpatialEcology.SEGrid <: EcoBase.AbstractRegularGrid
+    @test SpatialEcology.GridTopology <: EcoBase.AbstractRegularGrid
     @test SpatialEcology.GridData <: SpatialEcology.SEGrid
     @test SpatialEcology.SubGridData <: SpatialEcology.SEGrid
 
@@ -66,7 +69,7 @@ end
     gd = getcoords(places(asm))
 
     @test gd isa SpatialEcology.SEGrid
-    @test gd isa EcoBase.AbstractGrid
+    @test gd isa EcoBase.AbstractRegularGrid
 
     # EcoBase's own derivations, computed from SpatialEcology's primitives -
     # the untyped fallbacks decision 4 deliberately left alone.

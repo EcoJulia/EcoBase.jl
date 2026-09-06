@@ -18,4 +18,11 @@ export coordinateorder, cellanchor, xedges, yedges
 
 @deprecate nnz numnonzero false
 
+# AbstractGrid was too easily read as the whole gridded family once
+# AbstractGridded was inserted above it, when it means only the regular case.
+# The binding keeps working - a downstream still subtypes EcoBase.AbstractGrid
+# and lands on the same type - so this warns rather than breaking. Not
+# exported, as no EcoBase type is.
+Base.@deprecate_binding AbstractGrid AbstractRegularGrid false
+
 end # module

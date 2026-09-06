@@ -8,13 +8,13 @@ using EcoBase
 # EcoBase contributes abstractions and no concrete types, so its location data
 # interface has nothing to be exercised through without one of these. ToyGrid
 # stands in for the grids SpatialEcology and EcoSISTEM provide, implementing
-# exactly the six primitives EcoBase asks of an AbstractGrid and leaving the
+# exactly the six primitives EcoBase asks of an AbstractRegularGrid and leaving the
 # derived functions (cellsize, cells, xmax, ymax, xrange, yrange) to EcoBase.
 #
 # It is deliberately NOT square: a grid whose x and y extents match cannot
 # distinguish a result from its own transpose, so a square fixture would pass
 # whether or not the two axes had been swapped.
-struct ToyGrid <: EcoBase.AbstractGrid
+struct ToyGrid <: EcoBase.AbstractRegularGrid
     x0::Float64
     y0::Float64
     dx::Float64
@@ -39,7 +39,7 @@ function EcoBase.indices(grd::ToyGrid)
                                               inner = grd.nx)]
 end
 # ⚠️ idx MUST be typed. Left as plain `idx`, this method and EcoBase's own
-# indices(::AbstractGrid, ::AbstractCoordinateOrder) are mutually ambiguous,
+# indices(::AbstractRegularGrid, ::AbstractCoordinateOrder) are mutually ambiguous,
 # and asking this grid for an order throws instead of answering. That is
 # exactly the state SpatialEcology is in until it types its own selector, and
 # ToyGridUntyped below pins the behaviour.
@@ -65,7 +65,7 @@ EcoBase.coordinates(pnt::ToyPoints) = pnt.coords
 # Everything EcoBase computes from it must come out identical to ToyGrid's —
 # that equivalence is the entire purpose of coordinateorder, and it is what
 # would have caught the transposed grid EcoSISTEM once shipped.
-struct ToyGridYX <: EcoBase.AbstractGrid
+struct ToyGridYX <: EcoBase.AbstractRegularGrid
     grd::ToyGrid
 end
 
@@ -86,7 +86,7 @@ EcoBase.coordinates(gyx::ToyGridYX) = EcoBase.coordinates(gyx.grd)[:, [2, 1]]
 # A grid that leaves its column selector untyped, as SpatialEcology's SEGrid
 # still does. It exists to pin the one known limitation of asking for an order:
 # see the test below.
-struct ToyGridUntyped <: EcoBase.AbstractGrid
+struct ToyGridUntyped <: EcoBase.AbstractRegularGrid
     grd::ToyGrid
 end
 
@@ -97,7 +97,7 @@ EcoBase.indices(u::ToyGridUntyped, idx) = EcoBase.indices(u)[:, idx]
 
 # A regular grid that labels its cells by their lower corner rather than their
 # centre, as EcoSISTEM's grids do.
-struct ToyCornerGrid <: EcoBase.AbstractGrid
+struct ToyCornerGrid <: EcoBase.AbstractRegularGrid
     grd::ToyGrid
 end
 
@@ -156,11 +156,16 @@ EcoBase.places(::ToyFlatAssemblage) = ToyFlatPlaces()
 EcoBase.things(::ToyFlatAssemblage) = ToyGridThings()
 EcoBase.occurrences(::ToyFlatAssemblage) = ones(2, 3)
 
+# Subtyped through the DEPRECATED spelling, which is exactly what every
+# downstream still does. Julia prints a deprecation warning for this line when
+# the tests load, and that warning is the shim working rather than a failure.
+struct ToyOldName <: EcoBase.AbstractGrid end
+
 @testset "Location data hierarchy" begin
     # The relations downstream packages rely on when they subtype EcoBase.
     @test EcoBase.AbstractPoints <: EcoBase.AbstractLocationData
-    @test EcoBase.AbstractGrid <: EcoBase.AbstractLocationData
-    @test ToyGrid <: EcoBase.AbstractGrid
+    @test EcoBase.AbstractRegularGrid <: EcoBase.AbstractLocationData
+    @test ToyGrid <: EcoBase.AbstractRegularGrid
     @test ToyPoints <: EcoBase.AbstractPoints
 
     # AbstractPlaces is parameterised by location data, and Nothing means a
@@ -168,16 +173,31 @@ EcoBase.occurrences(::ToyFlatAssemblage) = ones(2, 3)
     @test EcoBase.AbstractPlaces{Nothing} <: EcoBase.AbstractPlaces
     @test EcoBase.AbstractPlaces{ToyGrid} <: EcoBase.AbstractPlaces
 
-    # The inserted levels. AbstractGrid keeps every relation it had, now by
+    # The inserted levels. AbstractRegularGrid keeps every relation it had, now by
     # transitivity through two hops rather than directly - which is what makes
     # the insertion additive in effect for everything downstream.
     @test EcoBase.AbstractAreas <: EcoBase.AbstractLocationData
     @test EcoBase.AbstractGridded <: EcoBase.AbstractAreas
-    @test EcoBase.AbstractGrid <: EcoBase.AbstractGridded
-    @test EcoBase.AbstractGrid <: EcoBase.AbstractAreas
+    @test EcoBase.AbstractRegularGrid <: EcoBase.AbstractGridded
+    @test EcoBase.AbstractRegularGrid <: EcoBase.AbstractAreas
 
     # Both kinds of grid are gridded; points are areas of neither kind.
     @test !(EcoBase.AbstractPoints <: EcoBase.AbstractAreas)
+end
+
+# AbstractGrid was renamed to AbstractRegularGrid, which every released
+# downstream still spells the old way - SpatialEcology's SEGrid and
+# GridTopology, EcoSISTEM's StudyGrid. The shim has to keep them working
+# unchanged, so what is checked here is not that the name resolves but that it
+# resolves to the SAME TYPE: anything less and a downstream subtyping the old
+# name would land somewhere the new methods do not reach.
+@testset "AbstractGrid deprecation" begin
+    @test EcoBase.AbstractGrid === EcoBase.AbstractRegularGrid
+    @test ToyOldName <: EcoBase.AbstractRegularGrid
+    @test ToyOldName <: EcoBase.AbstractGridded
+    # and it is genuinely marked deprecated, not merely aliased
+    @test Base.isdeprecated(EcoBase, :AbstractGrid)
+    @test !Base.isdeprecated(EcoBase, :AbstractRegularGrid)
 end
 
 @testset "Grid interface derived from the six primitives" begin

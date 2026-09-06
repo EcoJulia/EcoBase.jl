@@ -20,7 +20,7 @@ abstract type AbstractThings end
 Composed within AbstractPlaces in cases when geographic location data exists. It
 can reference locations with some geographical component. This may be a
 series of arbitrarily arranged points, a series of areas, or even grid
-of regularly spaced quadrats (see subtype AbstractGrid).
+of regularly spaced quadrats (see subtype AbstractRegularGrid).
 
 """
 abstract type AbstractLocationData end
@@ -63,18 +63,21 @@ abstract type AbstractAreas <: AbstractLocationData end
 Subtype of AbstractAreas where locations are gridded: addressed by row and
 column, whatever their spacing. This is the level that carries the index
 contract — xcells, ycells, cells, indices, xedges, yedges and cellanchor — and
-so the level for anything generic over every kind of grid.
+so the level for anything generic over every kind of grid. Cells of differing
+size or shape belong here; regularly spaced ones in AbstractRegularGrid below.
 
 """
 abstract type AbstractGridded <: AbstractAreas end
 
 """
-    AbstractGrid <: AbstractGridded
+    AbstractRegularGrid <: AbstractGridded
 
-Subtype of AbstractGridded where locations are a grid of regularly
-spaced, identically shaped, locations.
+Subtype of AbstractGridded where locations are a grid of regularly spaced,
+identically shaped, locations, so that one cell size describes every cell.
+That is what lets EcoBase derive the edges, and with them the whole coordinate
+surface, from xmin(), xcellsize() and xcells() alone.
 """
-abstract type AbstractGrid <: AbstractGridded end
+abstract type AbstractRegularGrid <: AbstractGridded end
 
 """
     AbstractCellAnchor
