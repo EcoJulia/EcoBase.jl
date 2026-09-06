@@ -1,23 +1,26 @@
 # SPDX-License-Identifier: MIT
 
-function convert_to_image(var::AbstractVector, grd::AbstractGrid)
-    x = Matrix{Float64}(undef, reverse(cells(grd))...)
+function convert_to_image(var::AbstractVector, grd::AbstractGridded)
+    # Rows are y and columns are x, so ask for those two counts by name.
+    # cells() cannot serve here: it comes back in the grid's own declared
+    # order, so reversing it only gives (y, x) for a grid that declares x
+    # first.
+    x = Matrix{Float64}(undef, ycells(grd), xcells(grd))
     fill!(x, NaN)
-    xind, yind = indices(grd, 1), indices(grd, 2) #since matrices are drawn from upper left corner
+    ind = indices(grd, XThenY(), CellCentre())
+    xind, yind = view(ind, :, 1), view(ind, :, 2)
     [x[yind[i], xind[i]] = val for (i, val) in enumerate(var)]
     return x
 end
 
-RecipesBase.@recipe function f(var::AbstractVector, grd::AbstractGrid)
+RecipesBase.@recipe function f(var::AbstractVector, grd::AbstractGridded)
     seriestype := :heatmap
     aspect_ratio --> :equal
     grid --> false
-    return xrange(grd), yrange(grd), convert_to_image(var, grd)
+    # A heatmap given one coordinate per cell reads them as cell CENTRES
+    return xrange(grd, CellCentre()), yrange(grd, CellCentre()),
+           convert_to_image(var, grd)
 end
-
-# RecipesBase.@recipe function f(sit::SiteFields) # not sure what SiteFields are
-#     ones(nsites(sit)), sit
-# end
 
 RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPoints)
     seriestype := :scatter
@@ -26,7 +29,7 @@ RecipesBase.@recipe function f(var::AbstractVector, pnt::AbstractPoints)
     marker_z := var
     legend --> false
     colorbar --> true
-    cd = coordinates(pnt)
+    cd = coordinates(pnt, XThenY())
     return cd[:, 1], cd[:, 2]
 end
 

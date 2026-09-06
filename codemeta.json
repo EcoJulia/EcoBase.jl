@@ -15,10 +15,10 @@
         "Windows",
         "macOS"
     ],
-    "version": "v0.1.7",
-    "dateModified": "2024-07-22",
+    "version": "v0.2.0",
+    "dateModified": "2026-09-06",
     "datePublished": "2018-09-20",
-    "downloadUrl": "https://github.com/EcoJulia/EcoBase.jl/archive/refs/tags/v0.1.7.tar.gz",
+    "downloadUrl": "https://github.com/EcoJulia/EcoBase.jl/archive/refs/tags/v0.2.0.tar.gz",
     "license": "https://spdx.org/licenses/MIT",
     "author": [
         {
@@ -52,7 +52,7 @@
             "type": "Person",
             "givenName": "Kevin",
             "familyName": "Bonham",
-            "email": "kbonham@wellesley.edu",
+            "email": "kevin.bonham@tuftsmedicine.org",
             "id": "https://orcid.org/0000-0003-3200-7533",
             "affiliation": [
                 {

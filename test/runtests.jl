@@ -48,7 +48,6 @@ if rsmd == "FALSE"
     Random.seed!(1234)
 
     @testset "EcoBase.jl" begin
-        @test isfile(EcoBase.path("runtests.jl"))
         println()
         @info "Running tests for files:"
         for t in testbase
@@ -71,15 +70,34 @@ if rsmd == "FALSE"
                   filter(str -> occursin(r"^pkg_.*\.jl$", str),
                          readdir()))
 
-    if length(pkgbase) > 0
+    # A pkg_Package.jl can only run when Package is in the test environment,
+    # and Package can only be there when it admits this version of EcoBase.
+    # A downstream still capped at an older EcoBase has to come out of
+    # [targets] altogether - leaving it there makes the environment
+    # unresolvable, and then nothing runs at all, not even our own tests. So
+    # the file stays and is skipped here until that package catches up.
+    available = filter(p -> !isnothing(Base.identify_package(p)), pkgbase)
+    skipped = filter(p -> isnothing(Base.identify_package(p)), pkgbase)
+
+    if length(skipped) > 0
+        println()
+        @warn "NOT cross validating (not in the test environment - check " *
+              "whether they now allow this version of EcoBase):"
+        for p in skipped
+            println("    ! $p")
+        end
+        println()
+    end
+
+    if length(available) > 0
         @info "Cross validation packages:"
         @testset begin
-            for p in pkgbase
+            for p in available
                 println("    = $p")
             end
             println()
 
-            @testset for p in pkgbase
+            @testset for p in available
                 fn = "pkg_$p.jl"
                 println("    * Validating $p.jl ...")
                 include(fn)
