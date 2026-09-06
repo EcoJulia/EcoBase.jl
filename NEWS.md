@@ -1,6 +1,6 @@
 # NEWS
 
-- v0.1.8
+- v0.2.0
   - Add coordinateorder() so location data declares whether its coordinate
     columns are x then y or y then x, rather than the order being assumed,
     and cellanchor() so a grid declares whether its coordinates are cell
