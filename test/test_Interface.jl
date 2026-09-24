@@ -53,6 +53,19 @@ const OCC = [1.0 0.0 3.0
              4.0 5.0 0.0
              1.0 0.0 0.0]
 
+# A string type that is neither a String nor a SubString, standing in for the
+# likes of the DataStrings CSV.jl reads, to check that names match across
+# string types.
+struct ToyName <: AbstractString
+    s::String
+end
+
+Base.ncodeunits(n::ToyName) = ncodeunits(n.s)
+Base.codeunit(n::ToyName) = codeunit(n.s)
+Base.codeunit(n::ToyName, i::Integer) = codeunit(n.s, i)
+Base.isvalid(n::ToyName, i::Integer) = isvalid(n.s, i)
+Base.iterate(n::ToyName, i::Integer = 1) = iterate(n.s, i)
+
 function toyassemblage(occ = OCC)
     return ToyAssemblage(occ,
                          ToyThings(["Thing $i"
@@ -159,6 +172,45 @@ end
     # With a second argument that is not names to match against, the first is
     # interpreted on its own.
     @test asindices(2, names) == 2
+
+    # Names match whatever AbstractString type either side is stored as.
+    subnames = [SubString("xThing $i", 2) for i in 1:3]
+    toynames = ToyName.(names)
+    @test asindices(["Thing 3", "Thing 1"], subnames) == [3, 1]
+    @test asindices(SubString.(["Thing 3", "Thing 1"]), names) == [3, 1]
+    @test asindices(["Thing 3", "Thing 1"], toynames) == [3, 1]
+    @test asindices(ToyName.(["Thing 3", "Thing 1"]), subnames) == [3, 1]
+    @test asindices("Thing 2", toynames) == 2
+    @test asindices(:var"Thing 2", toynames) == 2
+    @test asindices([:var"Thing 3", :var"Thing 1"], subnames) == [3, 1]
+    @test asindices(["Thing 3", "Nonesuch"], toynames) == [3]
+
+    # A missing selector only finds a missing name, whichever side allows it.
+    @test asindices(Union{Missing, String}["Thing 2", missing], names) == [2]
+    @test asindices(Union{Missing, String}["Thing 2", missing],
+                    Union{Missing, SubString{String}}[subnames; missing]) ==
+          [2, 4]
+    @test asindices([missing], names) == Int[]
+    @test asindices([missing], Union{Missing, String}["Thing 1", missing]) ==
+          [2]
+    @test asindices(Union{Missing, Symbol}[:missing, missing],
+                    ["missing", "Thing 1"]) == [1]
+
+    # Empty selectors find nothing.
+    @test asindices(String[], toynames) == Int[]
+    @test asindices(Symbol[], names) == Int[]
+    @test asindices(Union{}[], names) == Int[]
+
+    # Names looked up in something that holds no names is an error that says
+    # so, not a MethodError.
+    @test_throws ArgumentError asindices(["Thing 1"], [1, 2, 3])
+    @test_throws ArgumentError asindices("Thing 1", [1, 2, 3])
+    @test_throws ArgumentError asindices([:var"Thing 1"], 1:3)
+
+    # Only asindices' own methods, as other test files add methods to EcoBase
+    # functions that are deliberately ambiguous.
+    @test isempty(filter(amb -> first(amb).name === :asindices,
+                         Test.detect_ambiguities(EcoBase)))
 end
 
 @testset "Reordering coordinate columns" begin

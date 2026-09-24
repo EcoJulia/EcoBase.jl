@@ -14,17 +14,28 @@ function asindices(x::AbstractArray{Union{Missing, Bool}})
 end
 asindices(x::AbstractArray{T}) where {T <: Bool} = findall(x)
 asindices(x, y) = asindices(x)
-function asindices(x::AbstractArray{T},
-                   y::AbstractArray{T}) where {T <:
-                                               Union{Missing, AbstractString}}
-    return [el for el in indexin(x, y) if el !== nothing]
+function asindices(x::AbstractArray{<:Union{Missing, AbstractString, Symbol}},
+                   y)
+    throw(ArgumentError("cannot look names up in a $(typeof(y)): names must " *
+                        "be an array of AbstractStrings"))
 end
-function asindices(x::AbstractArray{T},
-                   y::AbstractArray{<:AbstractString}) where {T <:
-                                                              Union{Missing,
-                                                                    Symbol}}
-    return asindices(string.(x), y)
+# Names match across string types, so a String selector finds names stored as
+# any other AbstractString, such as the DataStrings that CSV.jl reads.
+function asindices(x::AbstractArray{<:Union{Missing, AbstractString}},
+                   y::AbstractArray{<:Union{Missing, AbstractString}})
+    return _indexnames(x, y)
 end
+function asindices(x::AbstractArray{<:Union{Missing, Symbol}},
+                   y::AbstractArray{<:Union{Missing, AbstractString}})
+    return asindices([ismissing(el) ? el : string(el) for el in x], y)
+end
+# An all-missing (or empty Union{}[]) selector could be strings or Symbols, so
+# settle it here.
+function asindices(x::AbstractArray{<:Missing},
+                   y::AbstractArray{<:Union{Missing, AbstractString}})
+    return _indexnames(x, y)
+end
+_indexnames(x, y) = [el for el in indexin(x, y) if el !== nothing]
 function asindices(x::T,
                    y::AbstractArray) where {T <: Union{Missing, Symbol,
                                                   AbstractString}}

@@ -1,5 +1,13 @@
 # NEWS
 
+- v0.2.1
+  - asindices() now matches names across AbstractString types, so a String
+    selector finds names stored as, e.g., the DataStrings CSV.jl reads. This
+    fixes subsetting CSV-read assemblages by name in SpatialEcology
+  - Looking names up in something that holds no names is now an ArgumentError
+    saying so, rather than a MethodError
+  - A missing in a Symbol selector no longer matches a name "missing"
+
 - v0.2.0
   - Add coordinateorder() so location data declares whether its coordinate
     columns are x then y or y then x, rather than the order being assumed,
