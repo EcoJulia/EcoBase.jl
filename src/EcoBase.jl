@@ -16,6 +16,15 @@ export asindices, indices, coordinates, xcells, ycells, cells, xmin, xmax, ymin,
 export xrange, yrange, xcellsize, ycellsize, cellsize, getcoords
 export coordinateorder, cellanchor, xedges, yedges
 
+# Part of the API but not exported: the types are used qualified (e.g.
+# EcoBase.AbstractAssemblage), and convert_to_image by the plot recipes of other
+# packages
+public AbstractThings, AbstractLocationData, AbstractPlaces, AbstractPoints
+public AbstractAreas, AbstractGridded, AbstractRegularGrid, AbstractAssemblage
+public AbstractCellAnchor, CellCentre, CellCorner
+public AbstractCoordinateOrder, XThenY, YThenX
+public convert_to_image
+
 @deprecate nnz numnonzero false
 
 # AbstractGrid was too easily read as the whole gridded family once

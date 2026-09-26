@@ -1,5 +1,12 @@
 # SPDX-License-Identifier: MIT
 
+"""
+    convert_to_image(var::AbstractVector, grd::AbstractGridded)
+
+The values in `var`, one per cell of `grd` in the grid's cell order, as a matrix
+with one row per y cell and one column per x cell, and `NaN` in cells without a
+value. This is the matrix the heatmap recipe draws.
+"""
 function convert_to_image(var::AbstractVector, grd::AbstractGridded)
     # Rows are y and columns are x, so ask for those two counts by name.
     # cells() cannot serve here: it comes back in the grid's own declared
