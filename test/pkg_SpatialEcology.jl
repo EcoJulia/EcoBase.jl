@@ -109,13 +109,12 @@ end
     # other.
     for host in (places(asm), asm)
         for f in (xcells, ycells, xmin, ymin, xmax, ymax, xcellsize, ycellsize,
-                  xrange, yrange, cells, cellsize, indices, coordinates,
-                  EcoBase.xedges, EcoBase.yedges, EcoBase.cellanchor)
+            xrange, yrange, cells, cellsize, indices, coordinates,
+            EcoBase.xedges, EcoBase.yedges, EcoBase.cellanchor)
             @test f(host) == f(gd)
         end
         for f in (xmin, ymin, xmax, ymax, xrange, yrange),
             anchor in (EcoBase.CellCentre(), EcoBase.CellCorner())
-
             @test f(host, anchor) == f(gd, anchor)
         end
         @test coordinates(host, EcoBase.YThenX()) ==

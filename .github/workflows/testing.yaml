@@ -21,8 +21,7 @@ jobs:
     strategy:
       matrix:
         julia-version:
-          - '1.6'
-          - '1.8'
+          - '1.11'
           - '1'
         os:
           - ubuntu-latest
@@ -33,13 +32,6 @@ jobs:
           - arm64
         exclude:
           - os: macOS-latest
-            julia-version: '1.6'
-            arch: arm64
-          - os: macOS-latest
-            julia-version: '1.8'
-            arch: arm64
-          - os: macOS-latest
-            julia-version: '1'
             arch: x64
           - os: ubuntu-latest
             arch: arm64

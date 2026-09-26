@@ -35,8 +35,8 @@ EcoBase.ycells(grd::ToyGrid) = grd.ny
 # way by default.
 function EcoBase.indices(grd::ToyGrid)
     return [
-    repeat(1:(grd.nx), outer = grd.ny) repeat(1:(grd.ny),
-                                              inner = grd.nx)]
+            repeat(1:(grd.nx), outer = grd.ny) repeat(1:(grd.ny),
+                                                      inner = grd.nx)]
 end
 # ⚠️ idx MUST be typed. Left as plain `idx`, this method and EcoBase's own
 # indices(::AbstractRegularGrid, ::AbstractCoordinateOrder) are mutually ambiguous,
@@ -442,8 +442,8 @@ end
     # to ask where its cells are.
     for host in (plc, asm)
         for f in (xcells, ycells, xmin, ymin, xmax, ymax, xcellsize, ycellsize,
-                  xrange, yrange, xedges, yedges, cellanchor, cells, cellsize,
-                  indices, coordinates, coordinateorder)
+            xrange, yrange, xedges, yedges, cellanchor, cells, cellsize,
+            indices, coordinates, coordinateorder)
             @test f(host) == f(grd)
         end
 
@@ -451,7 +451,6 @@ end
         # assemblage answered xmin(asm, corner) and not xmax(asm, corner).
         for f in (xmin, ymin, xmax, ymax, xrange, yrange),
             anchor in (EcoBase.CellCentre(), EcoBase.CellCorner())
-
             @test f(host, anchor) == f(grd, anchor)
         end
 
