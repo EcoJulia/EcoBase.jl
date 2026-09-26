@@ -571,10 +571,12 @@ _atedges(edges, ::CellCentre) = (edges[1:(end - 1)] .+ edges[2:end]) ./ 2
 
 # A regular grid's edges are a range and so are its cell coordinates, and the
 # generic method above would return a vector. Keeping the range preserves the
-# step that callers index, plot and take differences of.
+# step that callers index, plot and take differences of. The length is given
+# rather than a stop value: a float `start:step:stop` recomputes it from the
+# endpoints and can lose a cell, e.g. for a cell size of 0.1.
 function _atedges(edges::AbstractRange, ::CellCentre)
-    half = step(edges) / 2
-    return (first(edges) + half):step(edges):(last(edges) - half)
+    return range(first(edges) + step(edges) / 2, step = step(edges),
+                 length = length(edges) - 1)
 end
 
 # Move a grid's x-then-y coordinates from the anchor it reports them at to the

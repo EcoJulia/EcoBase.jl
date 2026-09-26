@@ -223,6 +223,18 @@ end
     # anything returning n + 1 here would be a change in what the name promises.
     @test length(xrange(grd)) == xcells(grd)
     @test length(yrange(grd)) == ycells(grd)
+
+    # ...also for cell sizes that are not exact in binary, where a range
+    # rebuilt from its float endpoints can come out a cell short
+    @testset "cell size $dx" for dx in (0.1, 1 / 12, 0.3, 1 / 3, 0.05)
+        for (x0, n) in ((-5.35, 60), (0.0, 1000), (-179.95, 3600), (0.1, 7))
+            g = ToyGrid(x0, x0, dx, dx, n, n)
+            @test length(xrange(g)) == n
+            @test length(yrange(g)) == n
+            @test isapprox(first(xrange(g)), x0; atol = 1e-9)
+            @test isapprox(last(xrange(g)), x0 + (n - 1) * dx; atol = 1e-9)
+        end
+    end
 end
 
 @testset "convert_to_image" begin
