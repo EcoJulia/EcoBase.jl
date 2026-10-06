@@ -12,11 +12,17 @@ using EcoBase
         :AbstractRegularGrid, :AbstractAssemblage, :AbstractCellAnchor,
         :CellCentre, :CellCorner, :AbstractCoordinateOrder, :XThenY,
         :YThenX, :convert_to_image)
-        @test Base.ispublic(EcoBase, name)
+        @test isdefined(EcoBase, name)
         @test !Base.isexported(EcoBase, name)
+        # Julia 1.10 has no public names, so @compat public drops them there
+        @static if VERSION >= v"1.11"
+            @test Base.ispublic(EcoBase, name)
+        end
     end
     # the deprecated binding stays out of the API
-    @test !Base.ispublic(EcoBase, :AbstractGrid)
+    @static if VERSION >= v"1.11"
+        @test !Base.ispublic(EcoBase, :AbstractGrid)
+    end
 end
 
 end

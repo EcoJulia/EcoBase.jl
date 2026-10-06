@@ -15,10 +15,10 @@
         "Windows",
         "macOS"
     ],
-    "version": "v0.2.1",
-    "dateModified": "2026-09-24",
+    "version": "v0.2.3",
+    "dateModified": "2026-10-06",
     "datePublished": "2018-09-20",
-    "downloadUrl": "https://github.com/EcoJulia/EcoBase.jl/archive/refs/tags/v0.2.1.tar.gz",
+    "downloadUrl": "https://github.com/EcoJulia/EcoBase.jl/archive/refs/tags/v0.2.3.tar.gz",
     "license": "https://spdx.org/licenses/MIT",
     "author": [
         {
