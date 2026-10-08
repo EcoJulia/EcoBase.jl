@@ -40,8 +40,7 @@ function EcoBase.indices(grd::ToyGrid)
 end
 # ⚠️ idx MUST be typed. Left as plain `idx`, this method and EcoBase's own
 # indices(::AbstractRegularGrid, ::AbstractCoordinateOrder) are mutually ambiguous,
-# and asking this grid for an order throws instead of answering. That is
-# exactly the state SpatialEcology is in until it types its own selector, and
+# and asking this grid for an order throws instead of answering.
 # ToyGridUntyped below pins the behaviour.
 EcoBase.indices(grd::ToyGrid, idx::Integer) = EcoBase.indices(grd)[:, idx]
 
@@ -83,9 +82,8 @@ EcoBase.coordinateorder(::ToyGridYX) = EcoBase.YThenX()
 # Its coordinates come back y first too, consistently with what it declares.
 EcoBase.coordinates(gyx::ToyGridYX) = EcoBase.coordinates(gyx.grd)[:, [2, 1]]
 
-# A grid that leaves its column selector untyped, as SpatialEcology's SEGrid
-# still does. It exists to pin the one known limitation of asking for an order:
-# see the test below.
+# A grid that leaves its column selector untyped. It exists to pin the one
+# known limitation of asking for an order: see the test below.
 struct ToyGridUntyped <: EcoBase.AbstractRegularGrid
     grd::ToyGrid
 end
@@ -185,12 +183,11 @@ struct ToyOldName <: EcoBase.AbstractGrid end
     @test !(EcoBase.AbstractPoints <: EcoBase.AbstractAreas)
 end
 
-# AbstractGrid was renamed to AbstractRegularGrid, which every released
-# downstream still spells the old way - SpatialEcology's SEGrid and
-# GridTopology, EcoSISTEM's StudyGrid. The shim has to keep them working
-# unchanged, so what is checked here is not that the name resolves but that it
-# resolves to the SAME TYPE: anything less and a downstream subtyping the old
-# name would land somewhere the new methods do not reach.
+# AbstractGrid is the deprecated name of AbstractRegularGrid, and a downstream
+# may still subtype it. The shim has to keep that working unchanged, so what
+# is checked here is not that the name resolves but that it resolves to the
+# SAME TYPE: anything less and a downstream subtyping the old name would land
+# somewhere the new methods do not reach.
 @testset "AbstractGrid deprecation" begin
     @test EcoBase.AbstractGrid === EcoBase.AbstractRegularGrid
     @test ToyOldName <: EcoBase.AbstractRegularGrid
@@ -293,8 +290,7 @@ end
     # ⚠️ The one known limitation, pinned rather than hidden. A grid whose own
     # indices(grd, idx) leaves idx untyped makes the two-argument ordered form
     # ambiguous, because neither method is more specific than the other. The
-    # fix belongs in the grid - type the selector - and until SpatialEcology
-    # does that, its grids cannot be asked for an order this way.
+    # fix belongs in the grid: type the selector.
     untyped = ToyGridUntyped(grd)
     @test_throws MethodError indices(untyped, xy)
 

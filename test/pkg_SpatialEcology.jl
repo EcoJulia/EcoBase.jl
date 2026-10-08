@@ -43,12 +43,9 @@ using EcoBase
 end
 
 @testset "SpatialEcology grids through EcoBase" begin
-    # The subtype relations this work must preserve. SEGrid and GridTopology
-    # reach EcoBase.AbstractRegularGrid by different routes - one through
-    # SEGrid, one directly - and both must survive anything inserted above it.
-    # Note that SpatialEcology spells it AbstractGrid, the deprecated name: it
-    # is the same type, and this pair passing is what says the shim carries a
-    # real downstream rather than only our own toy.
+    # SEGrid and GridTopology reach EcoBase.AbstractRegularGrid by different
+    # routes - one through SEGrid, one directly - and both must survive
+    # anything inserted above it.
     @test SpatialEcology.SEGrid <: EcoBase.AbstractRegularGrid
     @test SpatialEcology.GridTopology <: EcoBase.AbstractRegularGrid
     @test SpatialEcology.GridData <: SpatialEcology.SEGrid
@@ -71,8 +68,7 @@ end
     @test gd isa SpatialEcology.SEGrid
     @test gd isa EcoBase.AbstractRegularGrid
 
-    # EcoBase's own derivations, computed from SpatialEcology's primitives -
-    # the untyped fallbacks decision 4 deliberately left alone.
+    # EcoBase's own derivations, computed from SpatialEcology's primitives.
     @test cells(gd) == (3, 2)
     @test cellsize(gd) == (1.0, 10.0)
     @test xrange(gd) == 1.0:1.0:3.0
@@ -130,12 +126,12 @@ end
     @test indices(gd, 2, EcoBase.XThenY()) == indices(gd, 2)
     @test indices(gd, 1, EcoBase.YThenX()) == indices(gd, 2)
 
-    # ⚠️ The two-argument form, indices(gd, order), is AMBIGUOUS on this type:
-    # SpatialEcology's own indices(g::SEGrid, idx) leaves idx untyped, so
-    # neither method is more specific. It is deliberately NOT asserted here -
-    # pinning another package's current signature would turn their one-word
-    # fix (idx::Integer) into a failure in EcoBase's CI. The mechanism is
-    # pinned instead by ToyGridUntyped in test_DataTypes.jl, which we own.
+    # The two-argument form answers only because SpatialEcology types the
+    # selector of its own indices(g::SEGrid, idx::Integer). Left untyped,
+    # neither method is more specific, which ToyGridUntyped pins in
+    # test_DataTypes.jl.
+    @test indices(gd, EcoBase.XThenY()) == indices(gd)
+    @test indices(gd, EcoBase.YThenX()) == indices(gd)[:, [2, 1]]
 end
 
 # EcoBase owns these generics, so an ambiguity between its methods and a

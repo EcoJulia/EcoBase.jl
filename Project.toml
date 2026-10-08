@@ -11,6 +11,7 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
 Compat = "4.10"
+Diversity = "0.6.3"
 Git = "1"
 JuliaFormatter = "2"
 Logging = "1"
@@ -18,20 +19,24 @@ Pkg = "1"
 Random = "1"
 RecipesBase = "0.7, 0.8, 0.9, 1"
 ResearchSoftwareMetadata = "0.1, 0.2, 0.3"
+SpatialEcology = "0.11"
 julia = "1.10"
 
 [extras]
+Diversity = "d3d5718d-52de-57ab-b67a-eca7fd6175a4"
 Git = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
 JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ResearchSoftwareMetadata = "58378933-4625-47fa-851e-05ee27d397bd"
+SpatialEcology = "348f2d5d-71a3-5ad4-b565-8af070f99681"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [rsmd]
 keywords = ["macroecology", "ecology", "biology", "geography", "julia", "EcoJulia"]
 category = "ecology"
+description = "Base package for core interoperability between EcoJulia packages"
 development_status = "active"
 
     [[rsmd.author_details]]
@@ -54,4 +59,4 @@ development_status = "active"
         ror = "01srpnj69"
 
 [targets]
-test = ["Git", "JuliaFormatter", "Logging", "Pkg", "Random", "ResearchSoftwareMetadata", "Test"]
+test = ["Diversity", "Git", "JuliaFormatter", "Logging", "Pkg", "Random", "ResearchSoftwareMetadata", "SpatialEcology", "Test"]

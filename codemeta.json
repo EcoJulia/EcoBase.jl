@@ -7,8 +7,8 @@
     "codeRepository": "https://github.com/EcoJulia/EcoBase.jl",
     "name": "EcoBase.jl",
     "issueTracker": "https://github.com/EcoJulia/EcoBase.jl/issues",
-    "readme": "https://github.com/EcoJulia/EcoBase.jl/blob/main/README.md",
-    "buildInstructions": "https://github.com/EcoJulia/EcoBase.jl/blob/main/README.md",
+    "readme": "https://github.com/EcoJulia/EcoBase.jl/blob/HEAD/README.md",
+    "buildInstructions": "https://github.com/EcoJulia/EcoBase.jl/blob/HEAD/README.md",
     "dateCreated": "2018-01-30",
     "operatingSystem": [
         "Linux",
@@ -16,7 +16,7 @@
         "macOS"
     ],
     "version": "v0.2.3",
-    "dateModified": "2026-10-06",
+    "dateModified": "2026-10-08",
     "datePublished": "2018-09-20",
     "downloadUrl": "https://github.com/EcoJulia/EcoBase.jl/archive/refs/tags/v0.2.3.tar.gz",
     "license": "https://spdx.org/licenses/MIT",
@@ -74,5 +74,6 @@
         "geography",
         "julia",
         "macroecology"
-    ]
+    ],
+    "description": "Base package for core interoperability between EcoJulia packages"
 }
