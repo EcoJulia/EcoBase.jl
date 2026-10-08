@@ -16,8 +16,8 @@ asindices(x::AbstractArray{T}) where {T <: Bool} = findall(x)
 asindices(x, y) = asindices(x)
 function asindices(x::AbstractArray{<:Union{Missing, AbstractString, Symbol}},
                    y)
-    throw(ArgumentError("cannot look names up in a $(typeof(y)): names must " *
-                        "be an array of AbstractStrings"))
+    return throw(ArgumentError("cannot look names up in a $(typeof(y)): names must " *
+                               "be an array of AbstractStrings"))
 end
 # Names match across string types, so a String selector finds names stored as
 # any other AbstractString, such as the DataStrings that CSV.jl reads.
@@ -649,8 +649,8 @@ _ywidths(grd::AbstractRegularGrid) = ycellsize(grd)
 # - SpatialEcology's RasterData does - and asking the grid is the only way to
 # get that answer rather than a reconstruction of it.
 for f in (:xcells, :ycells, :xmin, :ymin, :xcellsize, :ycellsize, :xrange,
-          :yrange, :xedges, :yedges, :cellanchor, :indices, :_xwidths,
-          :_ywidths)
+    :yrange, :xedges, :yedges, :cellanchor, :indices, :_xwidths,
+    :_ywidths)
     @eval $f(x::_GriddedHolder) = $f(_gridded(x))
 end
 

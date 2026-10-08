@@ -1,5 +1,6 @@
 {
     "title": "EcoBase.jl",
+    "description": "Base package for core interoperability between EcoJulia packages",
     "upload_type": "software",
     "creators": [
         {

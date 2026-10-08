@@ -234,7 +234,7 @@ end
 
     # Swapping twice is the identity, whichever way round it started.
     for (from, to) in ((EcoBase.XThenY(), EcoBase.YThenX()),
-                       (EcoBase.YThenX(), EcoBase.XThenY()))
+        (EcoBase.YThenX(), EcoBase.XThenY()))
         @test EcoBase._incolumnorder(EcoBase._incolumnorder(cols, from, to),
                                      to, from) == cols
     end

@@ -75,14 +75,17 @@ if rsmd == "FALSE"
     # A downstream still capped at an older EcoBase has to come out of
     # [targets] altogether - leaving it there makes the environment
     # unresolvable, and then nothing runs at all, not even our own tests. So
-    # the file stays and is skipped here until that package catches up.
+    # the file stays and is skipped here until that package catches up. A
+    # downstream needing a newer Julia than EcoBase supports stays out for the
+    # same reason, until EcoBase's own floor reaches it.
     available = filter(p -> !isnothing(Base.identify_package(p)), pkgbase)
     skipped = filter(p -> isnothing(Base.identify_package(p)), pkgbase)
 
     if length(skipped) > 0
         println()
         @warn "NOT cross validating (not in the test environment - check " *
-              "whether they now allow this version of EcoBase):"
+              "whether they now allow this version of EcoBase, and every " *
+              "Julia version it supports):"
         for p in skipped
             println("    ! $p")
         end
