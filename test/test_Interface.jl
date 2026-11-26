@@ -89,6 +89,17 @@ end
     @test getcoords(places(asm)) === places(asm)
 end
 
+@testset "Renaming is left to the packages" begin
+    asm = toyassemblage()
+
+    # Only declared here: not even an assemblage forwards to its places or
+    # things, since EcoBase cannot know every copy of the names it holds.
+    @test isempty(methods(placenames!))
+    @test isempty(methods(thingnames!))
+    @test_throws MethodError placenames!(asm, ["a", "b", "c"])
+    @test_throws MethodError thingnames!(things(asm), ["a", "b", "c", "d"])
+end
+
 @testset "Counting occurrences" begin
     asm = toyassemblage()
 

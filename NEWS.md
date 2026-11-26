@@ -1,5 +1,11 @@
 # NEWS
 
+- v0.2.4
+  - Add placenames!() and thingnames!() for renaming places and things in
+    place. EcoBase only declares them: the packages defining places, things
+    and assemblages add the methods, as only they know every copy of the names
+    they keep
+
 - v0.2.1
   - asindices() now matches names across AbstractString types, so a String
     selector finds names stored as, e.g., the DataStrings CSV.jl reads. This
