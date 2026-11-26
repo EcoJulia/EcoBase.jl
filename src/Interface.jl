@@ -122,6 +122,21 @@ function placenames(asm::AbstractAssemblage, args...)
 end
 
 """
+    placenames!(x, newnames)
+
+Rename the places of `x` in place, `newnames` being in the order of the
+columns of occurrences(), and return `x`. A method should refuse names that
+are not unique or not one per place, and keep every copy of the names that
+`x` holds in step.
+
+EcoBase only declares this function. An assemblage may hold its place names
+more than once (with its places and with its things, say), and only the
+package defining it knows which copies to change, so there is no generic
+method for assemblages either.
+"""
+function placenames! end
+
+"""
     nthings(thg)
 
 Return how many things there are.
@@ -141,6 +156,19 @@ thingnames(asm::AbstractAssemblage) = thingnames(things(asm))
 function thingnames(asm::AbstractAssemblage, args...)
     return thingnames(things(asm), args...)
 end
+
+"""
+    thingnames!(x, newnames)
+
+Rename the things of `x` in place, `newnames` being in the order of the rows
+of occurrences(), and return `x`. A method should refuse names that are not
+unique or not one per thing, and keep every copy of the names that `x` holds
+in step.
+
+As for [`placenames!`](@ref), EcoBase only declares this function, with no
+generic method for assemblages.
+"""
+function thingnames! end
 
 """
     occurring(asm)
